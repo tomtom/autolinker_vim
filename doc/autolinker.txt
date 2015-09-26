@@ -1,0 +1,566 @@
+*autolinker.txt*       Automatic links (e.g. for minimal personal wikis)
+                Author: Thomas Link, micathom AT gmail com?subject=vim
+
+Features:
+
+    - Call |:Autolinkbuffer| to enable autolinker for the current buffer 
+      or check the definitions of |g:autolinker_filetypes| and 
+      |g:autolinker_patterns|.
+    - Jump to files in the current directory and highlight potential hyperlinks
+    - Jump to files in 'path'
+    - Jump to tags
+    - Invoke URLs
+    - Use a fallback command (e.g. create inexistent files)
+
+The default map is 'gz' in normal and visual mode (see |g:autolinker#nmap| and 
+|g:autolinker#xmap|). In insert mode, is is <c-cr> if the key is yet unmapped 
+(see |g:autolinker#imap|).
+
+Differences to |gf|:
+
+    - Customizable & extensible
+    - Supports several methods
+    - Highlight some potential hyperlinks
+    - When there are multiple potential matches, users can select the right 
+      file from a list
+
+
+-----------------------------------------------------------------------
+Install~
+
+Edit the vba file and type: >
+
+    :so %
+
+See :help vimball for details. If you have difficulties or use vim 7.0, 
+please make sure, you have the current version of vimball (vimscript 
+#1502) installed or update your runtime.
+
+Also available on https://github.com/tomtom/autolinker_vim
+
+========================================================================
+Contents~
+
+        g:autolinker_filetypes ............ |g:autolinker_filetypes|
+        g:autolinker_patterns ............. |g:autolinker_patterns|
+        :Autolinkbuffer ................... |:Autolinkbuffer|
+        g:autolinker#use_highlight ........ |g:autolinker#use_highlight|
+        g:autolinker#types ................ |g:autolinker#types|
+        g:autolinker#nmap ................. |g:autolinker#nmap|
+        g:autolinker#imap ................. |g:autolinker#imap|
+        g:autolinker#xmap ................. |g:autolinker#xmap|
+        g:autolinker#edit ................. |g:autolinker#edit|
+        g:autolinker#tag .................. |g:autolinker#tag|
+        g:autolinker#fallback ............. |g:autolinker#fallback|
+        g:autolinker#index ................ |g:autolinker#index|
+        g:autolinker#system_rx ............ |g:autolinker#system_rx|
+        g:autolinker#system_browser ....... |g:autolinker#system_browser|
+        g:autolinker#system_browser ....... |g:autolinker#system_browser|
+        g:autolinker#cfile_gsub ........... |g:autolinker#cfile_gsub|
+        prototype.BaseNameLinks
+        prototype.Dirname
+        prototype.Rootname
+        prototype.Highlight
+        prototype.CleanCFile
+        prototype.Edit
+        prototype.Jump_system
+        prototype.Jump_def
+        prototype.Jump_path
+        prototype.Jump_tag
+        prototype.Jump_fallback
+        autolinker#InstallHotkey .......... |autolinker#InstallHotkey()|
+        autolinker#Ensure ................. |autolinker#Ensure()|
+        autolinker#EnableBuffer ........... |autolinker#EnableBuffer()|
+        autolinker#Jump ................... |autolinker#Jump()|
+        prototype.CleanCFile
+        autolinker#ft_viki#GetInstance .... |autolinker#ft_viki#GetInstance()|
+        g:autolinker#use_highlight ........ |g:autolinker#use_highlight|
+        g:autolinker#types ................ |g:autolinker#types|
+        g:autolinker#nmap ................. |g:autolinker#nmap|
+        g:autolinker#imap ................. |g:autolinker#imap|
+        g:autolinker#xmap ................. |g:autolinker#xmap|
+        g:autolinker#edit ................. |g:autolinker#edit|
+        g:autolinker#tag .................. |g:autolinker#tag|
+        g:autolinker#fallback ............. |g:autolinker#fallback|
+        g:autolinker#index ................ |g:autolinker#index|
+        g:autolinker#system_rx ............ |g:autolinker#system_rx|
+        g:autolinker#system_browser ....... |g:autolinker#system_browser|
+        g:autolinker#system_browser ....... |g:autolinker#system_browser|
+        g:autolinker#cfile_gsub ........... |g:autolinker#cfile_gsub|
+        prototype.BaseNameLinks
+        prototype.Dirname
+        prototype.Rootname
+        prototype.Highlight
+        prototype.CleanCFile
+        prototype.Edit
+        prototype.Jump_system
+        prototype.Jump_def
+        prototype.Jump_path
+        prototype.Jump_tag
+        prototype.Jump_fallback
+        autolinker#InstallHotkey .......... |autolinker#InstallHotkey()|
+        autolinker#Ensure ................. |autolinker#Ensure()|
+        autolinker#EnableBuffer ........... |autolinker#EnableBuffer()|
+        autolinker#Jump ................... |autolinker#Jump()|
+
+
+========================================================================
+plugin/autolinker.vim~
+
+                                                    *g:autolinker_filetypes*
+g:autolinker_filetypes         (default: ['text', 'txt', 'viki', 'todo', 'todotxt', 'md', 'markdown', 'help'])
+
+                                                    *g:autolinker_patterns*
+g:autolinker_patterns          (default: ['*.txt', '*.md', '*.TXT'])
+
+                                                    *:Autolinkbuffer*
+:Autolinkbuffer
+
+
+========================================================================
+autoload/autolinker.vim~
+
+                                                    *g:autolinker#use_highlight*
+g:autolinker#use_highlight     (default: 1)
+    If true, highlight potential hyperlinks.
+
+                                                    *g:autolinker#types*
+g:autolinker#types             (default: ['def', 'system', 'path', 'tag', 'fallback'])
+    Possible values (the order is significant):
+    - def
+    - system
+    - path
+    - tag
+    - fallback
+
+                                                    *g:autolinker#nmap*
+g:autolinker#nmap              (default: 'gz')
+    Normal mode map.
+
+                                                    *g:autolinker#imap*
+g:autolinker#imap              (default: '<unique> <c-cr>')
+    Insert mode map.
+
+                                                    *g:autolinker#xmap*
+g:autolinker#xmap              (default: g:autolinker#nmap)
+    Visual mode map.
+
+                                                    *g:autolinker#edit*
+g:autolinker#edit              (default: 'tab drop')
+    Command for editing files.
+
+                                                    *g:autolinker#tag*
+g:autolinker#tag               (default: 'tag')
+
+                                                    *g:autolinker#fallback*
+g:autolinker#fallback          (default: ':'. g:autolinker#edit .',gf')
+    A comma-separated list of fallback procedures.
+    Normal command to run when everything else fails.
+    If the command starts with ':', it is an ex command.
+    branch to use.
+    Possible values are:
+    - gf
+    - ':'. g:autolinker#edit (if you want to create new files)
+
+                                                    *g:autolinker#index*
+g:autolinker#index             (default: '"index.". expand("%:e")')
+    The value is an expression that evaluates to the filename.
+    When opening directories, check whether a file with that name 
+    exists. If so, open that file instead of the directory.
+
+                                                    *g:autolinker#system_rx*
+g:autolinker#system_rx         (default: '^\%(https\?\|nntp\|mailto\):')
+    Open links matching this rx with |g:autolinker#system_browser|.
+
+                                                    *g:autolinker#system_browser*
+g:autolinker#system_browser    (default: ...)
+    Open files in the system browser.
+
+                                                    *g:autolinker#system_browser*
+g:autolinker#system_browser    (default: "exec 'silent !'. g:netrw_browsex_viewer shellescape('%s')")
+
+                                                    *g:autolinker#cfile_gsub*
+g:autolinker#cfile_gsub        (default: [])
+    A list of lists [RX, SUB] that are applied to the |<cfile>| under 
+    the cursor. This can be used to rewrite filenames and URLs, in 
+    order to implement e.g. interwikis.
+
+prototype.BaseNameLinks
+
+prototype.Dirname
+
+prototype.Rootname
+
+prototype.Highlight
+
+prototype.CleanCFile
+
+prototype.Edit
+
+prototype.Jump_system
+
+prototype.Jump_def
+
+prototype.Jump_path
+
+prototype.Jump_tag
+
+prototype.Jump_fallback
+
+                                                    *autolinker#InstallHotkey()*
+autolinker#InstallHotkey()
+
+                                                    *autolinker#Ensure()*
+autolinker#Ensure()
+
+                                                    *autolinker#EnableBuffer()*
+autolinker#EnableBuffer()
+
+                                                    *autolinker#Jump()*
+autolinker#Jump(mode)
+    Jump to the destination descibed by the word under the cursor. Use one 
+    of the following methods (see |g:autolinker#types|):
+    1. Jump by definition (depends on filetype; by default all files in the 
+       current directory)
+    2. Jump to special URLs matching |g:autolinker#system_rx|
+    3. Jump to a file in 'path' mathing the word under cursor
+    4. Jump to a tag
+    As last resort use |g:autolinker#fallback|
+
+                                                    *g:autolinker#use_highlight*
+g:autolinker#use_highlight     (default: 1)
+    If true, highlight potential hyperlinks.
+
+                                                    *g:autolinker#types*
+g:autolinker#types             (default: ['def', 'system', 'path', 'tag', 'fallback'])
+    Possible values (the order is significant):
+    - def
+    - system
+    - path
+    - tag
+    - fallback
+
+                                                    *g:autolinker#nmap*
+g:autolinker#nmap              (default: 'gz')
+    Normal mode map.
+
+                                                    *g:autolinker#imap*
+g:autolinker#imap              (default: '<unique> <c-cr>')
+    Insert mode map.
+
+                                                    *g:autolinker#xmap*
+g:autolinker#xmap              (default: g:autolinker#nmap)
+    Visual mode map.
+
+                                                    *g:autolinker#edit*
+g:autolinker#edit              (default: 'tab drop')
+    Command for editing files.
+
+                                                    *g:autolinker#tag*
+g:autolinker#tag               (default: 'tag')
+
+                                                    *g:autolinker#fallback*
+g:autolinker#fallback          (default: ':'. g:autolinker#edit .',gf')
+    A comma-separated list of fallback procedures.
+    Normal command to run when everything else fails.
+    If the command starts with ':', it is an ex command.
+    branch to use.
+    Possible values are:
+    - gf
+    - ':'. g:autolinker#edit (if you want to create new files)
+
+                                                    *g:autolinker#index*
+g:autolinker#index             (default: '"index.". expand("%:e")')
+    The value is an expression that evaluates to the filename.
+    When opening directories, check whether a file with that name 
+    exists. If so, open that file instead of the directory.
+
+                                                    *g:autolinker#system_rx*
+g:autolinker#system_rx         (default: '^\%(https\?\|nntp\|mailto\):')
+    Open links matching this rx with |g:autolinker#system_browser|.
+
+                                                    *g:autolinker#system_browser*
+g:autolinker#system_browser    (default: ...)
+    Open files in the system browser.
+
+                                                    *g:autolinker#system_browser*
+g:autolinker#system_browser    (default: "exec 'silent !'. g:netrw_browsex_viewer shellescape('%s')")
+
+                                                    *g:autolinker#cfile_gsub*
+g:autolinker#cfile_gsub        (default: [])
+    A list of lists [RX, SUB] that are applied to the |<cfile>| under 
+    the cursor. This can be used to rewrite filenames and URLs, in 
+    order to implement e.g. interwikis.
+
+prototype.BaseNameLinks
+
+prototype.Dirname
+
+prototype.Rootname
+
+prototype.Highlight
+
+prototype.CleanCFile
+
+prototype.Edit
+
+prototype.Jump_system
+
+prototype.Jump_def
+
+prototype.Jump_path
+
+prototype.Jump_tag
+
+prototype.Jump_fallback
+
+                                                    *autolinker#InstallHotkey()*
+autolinker#InstallHotkey()
+
+                                                    *autolinker#Ensure()*
+autolinker#Ensure()
+
+                                                    *autolinker#EnableBuffer()*
+autolinker#EnableBuffer()
+
+                                                    *autolinker#Jump()*
+autolinker#Jump(mode)
+    Jump to the destination descibed by the word under the cursor. Use one 
+    of the following methods (see |g:autolinker#types|):
+    1. Jump by definition (depends on filetype; by default all files in the 
+       current directory)
+    2. Jump to special URLs matching |g:autolinker#system_rx|
+    3. Jump to a file in 'path' mathing the word under cursor
+    4. Jump to a tag
+    As last resort use |g:autolinker#fallback|
+
+
+========================================================================
+autoload/autolinker/ft_viki.vim~
+
+prototype.CleanCFile
+
+                                                    *autolinker#ft_viki#GetInstance()*
+autolinker#ft_viki#GetInstance()
+
+
+========================================================================
+autoload/autolinker.vim~
+
+                                                    *g:autolinker#use_highlight*
+g:autolinker#use_highlight     (default: 1)
+    If true, highlight potential hyperlinks.
+
+                                                    *g:autolinker#types*
+g:autolinker#types             (default: ['def', 'system', 'path', 'tag', 'fallback'])
+    Possible values (the order is significant):
+    - def
+    - system
+    - path
+    - tag
+    - fallback
+
+                                                    *g:autolinker#nmap*
+g:autolinker#nmap              (default: 'gz')
+    Normal mode map.
+
+                                                    *g:autolinker#imap*
+g:autolinker#imap              (default: '<unique> <c-cr>')
+    Insert mode map.
+
+                                                    *g:autolinker#xmap*
+g:autolinker#xmap              (default: g:autolinker#nmap)
+    Visual mode map.
+
+                                                    *g:autolinker#edit*
+g:autolinker#edit              (default: 'tab drop')
+    Command for editing files.
+
+                                                    *g:autolinker#tag*
+g:autolinker#tag               (default: 'tag')
+
+                                                    *g:autolinker#fallback*
+g:autolinker#fallback          (default: ':'. g:autolinker#edit .',gf')
+    A comma-separated list of fallback procedures.
+    Normal command to run when everything else fails.
+    If the command starts with ':', it is an ex command.
+    branch to use.
+    Possible values are:
+    - gf
+    - ':'. g:autolinker#edit (if you want to create new files)
+
+                                                    *g:autolinker#index*
+g:autolinker#index             (default: '"index.". expand("%:e")')
+    The value is an expression that evaluates to the filename.
+    When opening directories, check whether a file with that name 
+    exists. If so, open that file instead of the directory.
+
+                                                    *g:autolinker#system_rx*
+g:autolinker#system_rx         (default: '^\%(https\?\|nntp\|mailto\):')
+    Open links matching this rx with |g:autolinker#system_browser|.
+
+                                                    *g:autolinker#system_browser*
+g:autolinker#system_browser    (default: ...)
+    Open files in the system browser.
+
+                                                    *g:autolinker#system_browser*
+g:autolinker#system_browser    (default: "exec 'silent !'. g:netrw_browsex_viewer shellescape('%s')")
+
+                                                    *g:autolinker#cfile_gsub*
+g:autolinker#cfile_gsub        (default: [])
+    A list of lists [RX, SUB] that are applied to the |<cfile>| under 
+    the cursor. This can be used to rewrite filenames and URLs, in 
+    order to implement e.g. interwikis.
+
+prototype.BaseNameLinks
+
+prototype.Dirname
+
+prototype.Rootname
+
+prototype.Highlight
+
+prototype.CleanCFile
+
+prototype.Edit
+
+prototype.Jump_system
+
+prototype.Jump_def
+
+prototype.Jump_path
+
+prototype.Jump_tag
+
+prototype.Jump_fallback
+
+                                                    *autolinker#InstallHotkey()*
+autolinker#InstallHotkey()
+
+                                                    *autolinker#Ensure()*
+autolinker#Ensure()
+
+                                                    *autolinker#EnableBuffer()*
+autolinker#EnableBuffer()
+
+                                                    *autolinker#Jump()*
+autolinker#Jump(mode)
+    Jump to the destination descibed by the word under the cursor. Use one 
+    of the following methods (see |g:autolinker#types|):
+    1. Jump by definition (depends on filetype; by default all files in the 
+       current directory)
+    2. Jump to special URLs matching |g:autolinker#system_rx|
+    3. Jump to a file in 'path' mathing the word under cursor
+    4. Jump to a tag
+    As last resort use |g:autolinker#fallback|
+
+                                                    *g:autolinker#use_highlight*
+g:autolinker#use_highlight     (default: 1)
+    If true, highlight potential hyperlinks.
+
+                                                    *g:autolinker#types*
+g:autolinker#types             (default: ['def', 'system', 'path', 'tag', 'fallback'])
+    Possible values (the order is significant):
+    - def
+    - system
+    - path
+    - tag
+    - fallback
+
+                                                    *g:autolinker#nmap*
+g:autolinker#nmap              (default: 'gz')
+    Normal mode map.
+
+                                                    *g:autolinker#imap*
+g:autolinker#imap              (default: '<unique> <c-cr>')
+    Insert mode map.
+
+                                                    *g:autolinker#xmap*
+g:autolinker#xmap              (default: g:autolinker#nmap)
+    Visual mode map.
+
+                                                    *g:autolinker#edit*
+g:autolinker#edit              (default: 'tab drop')
+    Command for editing files.
+
+                                                    *g:autolinker#tag*
+g:autolinker#tag               (default: 'tag')
+
+                                                    *g:autolinker#fallback*
+g:autolinker#fallback          (default: ':'. g:autolinker#edit .',gf')
+    A comma-separated list of fallback procedures.
+    Normal command to run when everything else fails.
+    If the command starts with ':', it is an ex command.
+    branch to use.
+    Possible values are:
+    - gf
+    - ':'. g:autolinker#edit (if you want to create new files)
+
+                                                    *g:autolinker#index*
+g:autolinker#index             (default: '"index.". expand("%:e")')
+    The value is an expression that evaluates to the filename.
+    When opening directories, check whether a file with that name 
+    exists. If so, open that file instead of the directory.
+
+                                                    *g:autolinker#system_rx*
+g:autolinker#system_rx         (default: '^\%(https\?\|nntp\|mailto\):')
+    Open links matching this rx with |g:autolinker#system_browser|.
+
+                                                    *g:autolinker#system_browser*
+g:autolinker#system_browser    (default: ...)
+    Open files in the system browser.
+
+                                                    *g:autolinker#system_browser*
+g:autolinker#system_browser    (default: "exec 'silent !'. g:netrw_browsex_viewer shellescape('%s')")
+
+                                                    *g:autolinker#cfile_gsub*
+g:autolinker#cfile_gsub        (default: [])
+    A list of lists [RX, SUB] that are applied to the |<cfile>| under 
+    the cursor. This can be used to rewrite filenames and URLs, in 
+    order to implement e.g. interwikis.
+
+prototype.BaseNameLinks
+
+prototype.Dirname
+
+prototype.Rootname
+
+prototype.Highlight
+
+prototype.CleanCFile
+
+prototype.Edit
+
+prototype.Jump_system
+
+prototype.Jump_def
+
+prototype.Jump_path
+
+prototype.Jump_tag
+
+prototype.Jump_fallback
+
+                                                    *autolinker#InstallHotkey()*
+autolinker#InstallHotkey()
+
+                                                    *autolinker#Ensure()*
+autolinker#Ensure()
+
+                                                    *autolinker#EnableBuffer()*
+autolinker#EnableBuffer()
+
+                                                    *autolinker#Jump()*
+autolinker#Jump(mode)
+    Jump to the destination descibed by the word under the cursor. Use one 
+    of the following methods (see |g:autolinker#types|):
+    1. Jump by definition (depends on filetype; by default all files in the 
+       current directory)
+    2. Jump to special URLs matching |g:autolinker#system_rx|
+    3. Jump to a file in 'path' mathing the word under cursor
+    4. Jump to a tag
+    As last resort use |g:autolinker#fallback|
+
+
+
+vim:tw=78:fo=w2croql:isk=!-~,^*,^|,^":ts=8:ft=help:norl:

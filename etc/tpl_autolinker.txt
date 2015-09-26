@@ -1,0 +1,45 @@
+*autolinker.txt*       Automatic links (e.g. for minimal personal wikis)
+                Author: Thomas Link, micathom AT gmail com?subject=vim
+
+Features:
+
+    - Call |:Autolinkbuffer| to enable autolinker for the current buffer 
+      or check the definitions of |g:autolinker_filetypes| and 
+      |g:autolinker_patterns|.
+    - Jump to files in the current directory and highlight potential hyperlinks
+    - Jump to files in 'path'
+    - Jump to tags
+    - Invoke URLs
+    - Use a fallback command (e.g. create inexistent files)
+
+The default map is 'gz' in normal and visual mode (see |g:autolinker#nmap| and 
+|g:autolinker#xmap|). In insert mode, is is <c-cr> if the key is yet unmapped 
+(see |g:autolinker#imap|).
+
+Differences to |gf|:
+
+    - Customizable & extensible
+    - Supports several methods
+    - Highlight some potential hyperlinks
+    - When there are multiple potential matches, users can select the right 
+      file from a list
+
+
+-----------------------------------------------------------------------
+Install~
+
+To install the vimball, edit the vba file and type: >
+
+    :so %%
+
+See :help vimball for details.
+
+To install from github, please use a plugin manager like enable_vim, pathogen, 
+VAM, Vundle, NeoBundle, vim-plug, vim-unbundle etc.
+
+This script requires tlib (vimscript #1863) to be installed -- see 
+https://github.com/tomtom/tlib_vim.
+
+Also available on https://github.com/tomtom/autolinker_vim
+
+%s
