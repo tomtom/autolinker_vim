@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-09-26
-" @Revision:    326
+" @Last Change: 2015-09-28
+" @Revision:    475
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 114
@@ -28,7 +28,7 @@ if !exists('g:autolinker#types')
     " - path (files in 'path')
     " - tag (tags)
     " - fallback (see |g:autolinker#fallback|)
-    let g:autolinker#types = ['system', 'def', 'path', 'tag', 'fallback']   "{{{2
+    let g:autolinker#types = ['system', 'path', 'def', 'tag', 'fallback']   "{{{2
 endif
 
 
@@ -87,7 +87,7 @@ endif
 
 if !exists('g:autolinker#special_protocols')
     " Open links matching this rx with |g:autolinker#system_browser|.
-    let g:autolinker#system_rx = '^\%(https\?\|nntp\|mailto\):'   "{{{2
+    let g:autolinker#system_rx = '\%(^\%(https\?\|nntp\|mailto\):\|\.\%(xlsx\?\|docx\?\|pptx\?\|accdb\|mdb\|sqlite\|pdf\)\)'   "{{{2
 endif
 
 
@@ -119,27 +119,45 @@ if !exists('g:autolinker#cfile_gsub')
 endif
 
 
-function! s:Dispatch(method, default, ...) abort "{{{3
-    if has_key(b:autolinker, a:method)
-        return call(b:autolinker[a:method], a:000, b:autolinker)
-    else
-        let fn = 'autolinker#'. a:method
-        if exists('*'. fn)
-            return call(fn, a:000)
-        else
-            return a:default
-        endif
-    endif
-endf
-
-
 let s:prototype = {'fallback': g:autolinker#fallback
+            \ , 'types': g:autolinker#types
             \ , 'use_highlight': g:autolinker#use_highlight
             \ , 'cfile_gsub': g:autolinker#cfile_gsub
             \ }
 
-function! s:prototype.BaseNameLinks() dict abort "{{{3
-    let files = glob(self.Dirname() .'/'. get(self, 'pattern', '*'), 0, 1)
+
+if v:version > 704 || (v:version == 704 && has('patch279'))
+    function! s:DoGlobPath(path, pattern) abort "{{{3
+        return globpath(a:path, a:pattern, 0, 1)
+    endf
+else
+    function! s:DoGlobPath(path, pattern) abort "{{{3
+        return split(globpath(a:path, a:pattern), '\n')
+    endf
+endif
+
+
+function! s:IsValidCache(id) abort "{{{3
+    return has_key(g:autolinker_glob_cache, a:id)
+endf
+
+
+function! s:Globpath(path, pattern) abort "{{{3
+    let id = join([getcwd(), a:path, a:pattern], '|')
+    if s:IsValidCache(id)
+        let matches = g:autolinker_glob_cache[id].files
+    else
+        let matches = s:DoGlobPath(a:path, a:pattern)
+        let matches = map(matches, 'fnamemodify(v:val, ":p")')
+        let matches = tlib#list#Uniq(matches)
+        let g:autolinker_glob_cache[id] = {'files': matches}
+    endif
+    return matches
+endf
+
+
+function! s:prototype.WordLinks() dict abort "{{{3
+    let files = s:Globpath(self.Dirname(), get(self, 'pattern', '*'))
     " TLogVAR self.Dirname(), files
     let defs = {}
     let rootname = self.Rootname()
@@ -165,6 +183,19 @@ function! s:prototype.Rootname() abort dict "{{{3
 endf
 
 
+function! s:prototype.InstallHotkey() abort dict "{{{3
+    if !empty(g:autolinker#nmap)
+        exec 'silent! nnoremap <buffer>' g:autolinker#nmap ':call autolinker#Jump("n")<cr>'
+    endif
+    if !empty(g:autolinker#imap)
+        exec 'silent! inoremap <buffer>' g:autolinker#imap '<c-\><c-o>:call autolinker#Jump("i")<cr>'
+    endif
+    if !empty(g:autolinker#xmap)
+        exec 'silent! xnoremap <buffer>' g:autolinker#xmap '""y:call autolinker#Jump("v")<cr>'
+    endif
+endf
+
+
 function! s:prototype.Highlight() abort dict "{{{3
     if self.use_highlight
         silent! syn clear AutoHyperlink
@@ -175,6 +206,36 @@ function! s:prototype.Highlight() abort dict "{{{3
             exec 'hi AutoHyperlink term=underline cterm=underline gui=underline ctermfg='. col 'guifg='. col
         endif
     endif
+endf
+
+
+function! s:prototype.Edit(filename) abort dict "{{{3
+    " TLogVAR a:filename
+    try
+        if !self.Jump_system('n', a:filename, a:filename)
+            let filename = a:filename
+            if isdirectory(filename)
+                let index = filename .'/'. eval(g:autolinker#index)
+                if filereadable(index)
+                    let filename = index
+                endif
+            endif
+            exec g:autolinker#edit fnameescape(filename)
+            call autolinker#Ensure()
+        endif
+        return 1
+    catch
+        echohl ErrorMsg
+        echom v:exception
+        echom v:throwpoint
+        echohl NONE
+        return 0
+    endtry
+endf
+
+
+function! s:prototype.CleanCWord(text) abort dict "{{{3
+    return a:text
 endf
 
 
@@ -191,30 +252,8 @@ function! s:prototype.CleanCFile(text) abort dict "{{{3
 endf
 
 
-function! s:prototype.Edit(filename) abort dict "{{{3
-    " TLogVAR a:filename
-    try
-        let filename = a:filename
-        if isdirectory(filename)
-            let index = filename .'/'. eval(g:autolinker#index)
-            if filereadable(index)
-                let filename = index
-            endif
-        endif
-        exec g:autolinker#edit fnameescape(filename)
-        call autolinker#Ensure()
-        return 1
-    catch
-        echohl ErrorMsg
-        echom v:exception
-        echom v:throwpoint
-        echohl NONE
-        return 0
-    endtry
-endf
-
-
 function! s:prototype.Jump_system(mode, cword, cfile) abort dict "{{{3
+    " TLogVAR a:mode, a:cword, a:cfile
     if a:cfile =~ g:autolinker#system_rx
         let cmd = printf(g:autolinker#system_browser, a:cfile)
         exec cmd
@@ -226,6 +265,7 @@ endf
 
 
 function! s:prototype.Jump_def(mode, cword, cfile) abort dict "{{{3
+    " TLogVAR a:mode, a:cword, a:cfile
     let exact = []
     let partly = []
     for [rname, def] in items(self.defs)
@@ -263,13 +303,13 @@ endf
 
 
 function! s:prototype.Jump_path(mode, cword, cfile) abort dict "{{{3
-    if has_key(self.globpath, a:cfile)
-        let matches = self.globpath[a:cfile]
-    else
-        let matches = globpath(&path, a:cfile .'*', 0, 1)
-        let matches = map(matches, 'fnamemodify(v:val, ":p")')
-        let matches = tlib#list#Uniq(matches)
-        let self.globpath[a:cfile] = matches
+    " TLogVAR a:mode, a:cword, a:cfile
+    let matches = s:Globpath(&path, a:cfile .'*')
+    let brx = '\C\V\%(\^\|\[\/]\)'. substitute(a:cfile, '[\/]', '\\[\\/]', 'g') .'.\[^.]\+\$'
+    let bmatches = filter(copy(matches), 'v:val =~ brx')
+    " TLogVAR brx, bmatches, matches
+    if !empty(bmatches)
+        let matches = bmatches
     endif
     let nmatches = len(matches)
     if nmatches == 1
@@ -286,6 +326,7 @@ endf
 
 
 function! s:prototype.Jump_tag(mode, cword, cfile) abort dict "{{{3
+    " TLogVAR a:mode, a:cword, a:cfile
     try
         exec 'tab' g:autolinker#tag a:cword
         return 1
@@ -297,14 +338,14 @@ endf
 
 
 function! s:prototype.Jump_fallback(mode, cword, cfile) abort dict "{{{3
+    " TLogVAR a:mode, a:cword, a:cfile
     try
         let fallback = self.fallback
         if stridx(fallback, ',') != -1
-            let fallbacks = split(fallback, ',')
+            let fallbacks = map(split(fallback, ','), 'tlib#string#Printf1(v:val, a:cfile)')
             let fallback = tlib#input#List('s', 'Use', fallbacks)
         endif
         if !empty(fallback)
-            let fallback = tlib#string#Printf1(fallback, a:cfile)
             if fallback =~# '^:'
                 exec fallback
             else
@@ -323,19 +364,6 @@ function! s:prototype.Jump_fallback(mode, cword, cfile) abort dict "{{{3
 endf
 
 
-function! autolinker#InstallHotkey() abort "{{{3
-    if !empty(g:autolinker#nmap)
-        exec 'silent! nnoremap <buffer>' g:autolinker#nmap ':call autolinker#Jump("n")<cr>'
-    endif
-    if !empty(g:autolinker#imap)
-        exec 'silent! inoremap <buffer>' g:autolinker#imap '<c-\><c-o>:call autolinker#Jump("i")<cr>'
-    endif
-    if !empty(g:autolinker#xmap)
-        exec 'silent! xnoremap <buffer>' g:autolinker#xmap '""y:call autolinker#Jump("v")<cr>'
-    endif
-endf
-
-
 function! autolinker#Ensure() abort "{{{3
     if !exists('b:autolinker')
         call autolinker#EnableBuffer()
@@ -347,24 +375,18 @@ let s:ft_prototypes = {}
 
 function! autolinker#EnableBuffer() abort "{{{3
     let ft = &ft
-    let b:autolinker = copy(s:prototype)
-    let b:autolinker.globpath = {}
     if !has_key(s:ft_prototypes, ft)
+        let prototype = deepcopy(s:prototype)
         try
-            let s:ft_prototypes[ft] = autolinker#ft_{ft}#GetInstance()
+            let s:ft_prototypes[ft] = autolinker#ft_{ft}#GetInstance(prototype)
         catch /^Vim\%((\a\+)\)\=:E117/
-            let s:ft_prototypes[ft] = {}
+            let s:ft_prototypes[ft] = prototype
         endtry
     endif
-    let b:autolinker = extend(b:autolinker, s:ft_prototypes[ft])
-    let defs = call(b:autolinker.BaseNameLinks, [], b:autolinker)
-    let defs_ft = s:Dispatch('FiletypeLinks', {})
-    if !empty(defs_ft)
-        let defs = extend(defs, defs_ft)
-    endif
-    let b:autolinker.defs = defs
+    let b:autolinker = copy(s:ft_prototypes[ft])
+    let b:autolinker.defs = b:autolinker.WordLinks()
     call b:autolinker.Highlight()
-    call s:Dispatch('InstallHotkey', 0)
+    call b:autolinker.InstallHotkey()
 endf
 
 
@@ -380,9 +402,9 @@ function! autolinker#Jump(mode) abort "{{{3
     call autolinker#Ensure()
     if stridx('in', a:mode) != -1
         let cfile = expand("<cfile>")
-        let cfile = s:Dispatch('CleanCFile', cfile, cfile)
+        let cfile = b:autolinker.CleanCFile(cfile)
         let cword = expand("<cword>")
-        let cword = s:Dispatch('CleanCWord', cword, cword)
+        let cword = b:autolinker.CleanCWord(cword)
     elseif a:mode ==# 'v'
         let cfile = @"
         let cword = cfile
@@ -390,22 +412,35 @@ function! autolinker#Jump(mode) abort "{{{3
         throw 'AutoLinker: Unsupported mode: '. a:mode
     endif
     " TLogVAR a:mode, cfile, cword
-    let args = [a:mode, cword, cfile]
-    for type in g:autolinker#types
+    call s:Jump(a:mode, cfile, cword)
+endf
+
+
+function! s:Jump(mode, cfile, cword) abort "{{{3
+    let args = [a:mode, a:cword, a:cfile]
+    for type in b:autolinker.types
         let method = 'Jump_'. type
+        " TLogVAR method
         if has_key(b:autolinker, method) && call(b:autolinker[method], args, b:autolinker)
             return
         endif
     endfor
-    echom 'Autolinker: I can''t dance --' cfile
+    echom 'Autolinker: I can''t dance --' a:cfile
+endf
+
+
+function! autolinker#Edit(cfile) abort "{{{3
+    call autolinker#Ensure()
+    call s:Jump('n', a:cfile, a:cfile)
 endf
 
 
 function! autolinker#EditInPath(cfile) abort "{{{3
-    let filenames = map(split(&path, ','), 'substitute(v:val, ''[^\/]\zs$'', ''/'', ''g'') . a:cfile')
+    let filenames = map(split(&path, ','), 'tlib#file#Join([v:val, a:cfile])')
     let filename = tlib#input#List('s', 'Select file:', filenames)
     if !empty(filename)
         exec g:autolinker#edit fnameescape(filename)
     endif
 endf
+
 

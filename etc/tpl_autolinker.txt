@@ -12,7 +12,7 @@ Features:
     - Invoke URLs
     - Use a fallback command (e.g. create inexistent files)
 
-The default map is 'gz' in normal and visual mode (see |g:autolinker#nmap| and 
+The default map is `gz` in normal and visual mode (see |g:autolinker#nmap| and 
 |g:autolinker#xmap|). In insert mode, is is <c-cr> if the key is yet unmapped 
 (see |g:autolinker#imap|).
 
