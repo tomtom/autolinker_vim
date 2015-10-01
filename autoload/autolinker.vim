@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-09-28
-" @Revision:    475
+" @Last Change: 2015-09-30
+" @Revision:    491
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 114
@@ -15,8 +15,16 @@ endif
 
 
 if !exists('g:autolinker#use_highlight')
-    " If true, highlight potential hyperlinks.
-    let g:autolinker#use_highlight = 1   "{{{2
+    " Items that should be highlighted as hyperlinks:
+    " - word
+    " - url
+    let g:autolinker#use_highlight = ['word', 'url']   "{{{2
+endif
+
+
+if !exists('g:autolinker#url_rx')
+    let g:autolinker#url_rx = '\l\{2,6}://[-./[:alnum:]_~%#?&]\+'   "{{{2
+    " let g:autolinker#url_rx = '\<\%(ht\|f\)tps\?:\/\/\f\+'   "{{{2
 endif
 
 
@@ -197,14 +205,20 @@ endf
 
 
 function! s:prototype.Highlight() abort dict "{{{3
-    if self.use_highlight
-        silent! syn clear AutoHyperlink
-        let rx = join(map(values(self.defs), 'v:val.rx'), '\|')
-        if !empty(rx)
-            exec 'syn match AutoHyperlink /'. escape(rx, '/') .'/'
-            let col = &background == 'dark' ? 'Cyan' : 'DarkBlue'
-            exec 'hi AutoHyperlink term=underline cterm=underline gui=underline ctermfg='. col 'guifg='. col
+    if !empty(self.use_highlight)
+        if index(self.use_highlight, 'word')
+            silent! syn clear AutoHyperlink
+            let rx = join(map(values(self.defs), 'v:val.rx'), '\|')
+            if !empty(rx)
+                exec 'syn match AutoHyperlink /'. escape(rx, '/') .'/'
+            endif
         endif
+        if index(self.use_highlight, 'url')
+            exec 'syn match AutoHyperlink /'. escape(g:autolinker#url_rx, '/') .'/'
+        endif
+        " let col = &background == 'dark' ? 'Cyan' : 'DarkBlue'
+        " exec 'hi AutoHyperlink term=underline cterm=underline gui=underline ctermfg='. col 'guifg='. col
+        hi AutoHyperlink term=underline cterm=underline gui=underline
     endif
 endf
 
@@ -255,7 +269,7 @@ endf
 function! s:prototype.Jump_system(mode, cword, cfile) abort dict "{{{3
     " TLogVAR a:mode, a:cword, a:cfile
     if a:cfile =~ g:autolinker#system_rx
-        let cmd = printf(g:autolinker#system_browser, a:cfile)
+        let cmd = printf(g:autolinker#system_browser, escape(a:cfile, ' %#!'))
         exec cmd
         return 1
     else
