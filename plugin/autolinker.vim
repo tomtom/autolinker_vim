@@ -1,9 +1,9 @@
 " @Author:      Thomas Link (micathom AT gmail.com)
 " @GIT:         http://github.com/tomtom/autolinker_vim/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-10-01.
-" @Revision:    58
-" GetLatestVimScripts: 0 0 :AutoInstall: autolinker.vim
+" @Last Change: 2015-10-02.
+" @Revision:    59
+" GetLatestVimScripts: 5253 0 :AutoInstall: autolinker.vim
 " Automatic hyperlinks for any filetype
 
 if &cp || exists("loaded_autolinker")
