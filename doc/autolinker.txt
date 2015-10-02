@@ -1,4 +1,4 @@
-*autolinker.txt*       Automatic links (e.g. for minimal personal wikis)
+*autolinker.txt*       Automatic links for any filetype (e.g. for a markdown/latex based wiki)
                 Author: Thomas Link, micathom AT gmail com?subject=vim
 
 Features:
@@ -62,6 +62,7 @@ Contents~
         prototype.Jump_tag
         prototype.Jump_fallback
         g:autolinker#use_highlight .......... |g:autolinker#use_highlight|
+        g:autolinker#url_rx ................. |g:autolinker#url_rx|
         g:autolinker#types .................. |g:autolinker#types|
         g:autolinker#nmap ................... |g:autolinker#nmap|
         g:autolinker#imap ................... |g:autolinker#imap|
@@ -98,7 +99,7 @@ Contents~
 plugin/autolinker.vim~
 
                                                     *g:autolinker_filetypes*
-g:autolinker_filetypes         (default: ['text', 'txt', 'viki', 'todo', 'todotxt', 'md', 'markdown', 'markdown.pandoc', 'tex', 'latex', 'help'])
+g:autolinker_filetypes         (default: ['text', 'txt', 'todo', 'todotxt', 'md', 'markdown', 'markdown.pandoc', 'tex', 'latex', 'help'])
 
                                                     *g:autolinker_patterns*
 g:autolinker_patterns          (default: ['*.txt', '*.TXT', '*.md', '*.markdown'])
@@ -149,8 +150,13 @@ prototype.Jump_fallback
 autoload/autolinker.vim~
 
                                                     *g:autolinker#use_highlight*
-g:autolinker#use_highlight     (default: 1)
-    If true, highlight potential hyperlinks.
+g:autolinker#use_highlight     (default: ['word', 'url'])
+    Items that should be highlighted as hyperlinks:
+    - word
+    - url
+
+                                                    *g:autolinker#url_rx*
+g:autolinker#url_rx            (default: '\l\{2,6}://[-./[:alnum:]_~%#?&]\+')
 
                                                     *g:autolinker#types*
 g:autolinker#types             (default: ['system', 'path', 'def', 'tag', 'fallback'])

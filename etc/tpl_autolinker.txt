@@ -1,4 +1,4 @@
-*autolinker.txt*       Automatic links (e.g. for minimal personal wikis)
+*autolinker.txt*       Automatic links for any filetype (e.g. for a markdown/latex based wiki)
                 Author: Thomas Link, micathom AT gmail com?subject=vim
 
 Features:
