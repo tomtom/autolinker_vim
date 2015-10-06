@@ -71,6 +71,8 @@ Contents~
         g:autolinker#tag .................... |g:autolinker#tag|
         g:autolinker#fallback ............... |g:autolinker#fallback|
         g:autolinker#index .................. |g:autolinker#index|
+        g:autolinker#special_protocols ...... |g:autolinker#special_protocols|
+        g:autolinker#special_suffixes ....... |g:autolinker#special_suffixes|
         g:autolinker#system_rx .............. |g:autolinker#system_rx|
         g:autolinker#system_browser ......... |g:autolinker#system_browser|
         g:autolinker#system_browser ......... |g:autolinker#system_browser|
@@ -79,6 +81,8 @@ Contents~
         prototype.Dirname
         prototype.Rootname
         prototype.InstallHotkey
+        n_]gz ............................... |n_]gz|
+        n_[gz ............................... |n_[gz|
         prototype.Highlight
         prototype.Edit
         prototype.CleanCWord
@@ -93,6 +97,7 @@ Contents~
         autolinker#Jump ..................... |autolinker#Jump()|
         autolinker#Edit ..................... |autolinker#Edit()|
         autolinker#EditInPath ............... |autolinker#EditInPath()|
+        autolinker#NextLink ................. |autolinker#NextLink()|
 
 
 ========================================================================
@@ -207,9 +212,22 @@ g:autolinker#index             (default: '"index.". expand("%:e")')
     When opening directories, check whether a file with that name 
     exists. If so, open that file instead of the directory.
 
+                                                    *g:autolinker#special_protocols*
+g:autolinker#special_protocols (default: ['https\?', 'nntp', 'mailto'])
+    A list of |regexp|s matching protocol names that should be handled 
+    by |g:autolinker#system_browser|.
+    CAVEAT: Must be a |\V| |regexp|.
+
+                                                    *g:autolinker#special_suffixes*
+g:autolinker#special_suffixes  (default: ['xlsx\?', 'docx\?', 'pptx\?', 'accdb', 'mdb', 'sqlite', 'pdf', 'jpg', 'png', 'gif'])
+    A list of |regexp|s matching suffixes that should be handled by 
+    |g:autolinker#system_browser|.
+    CAVEAT: Must be a |\V| |regexp|.
+
                                                     *g:autolinker#system_rx*
-g:autolinker#system_rx         (default: '\%(^\%(https\?\|nntp\|mailto\):\|\.\%(xlsx\?\|docx\?\|pptx\?\|accdb\|mdb\|sqlite\|pdf\)\)')
-    Open links matching this rx with |g:autolinker#system_browser|.
+g:autolinker#system_rx         (default: printf('\V\%(\^\%(%s\):\|.\%(%s\)\)', join(g:autolinker#special_protocols, '\|'), join(g:autolinker#special_suffixes, '\|')))
+    Open links matching this |regexp| with |g:autolinker#system_browser|.
+    CAVEAT: Must be a |\V| |regexp|.
 
                                                     *g:autolinker#system_browser*
 g:autolinker#system_browser    (default: ...)
@@ -231,6 +249,12 @@ prototype.Dirname
 prototype.Rootname
 
 prototype.InstallHotkey
+
+                                                    *n_]gz*
+n_]gz ... :<C-U>call autolinker#NextLink(v:count1)<cr>
+
+                                                    *n_[gz*
+n_[gz ... :<C-U>call autolinker#NextLink(- v:count1)<cr>
 
 prototype.Highlight
 
@@ -272,6 +296,9 @@ autolinker#Edit(cfile)
 
                                                     *autolinker#EditInPath()*
 autolinker#EditInPath(cfile)
+
+                                                    *autolinker#NextLink()*
+autolinker#NextLink(n)
 
 
 

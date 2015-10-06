@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-09-30
-" @Revision:    491
+" @Last Change: 2015-10-06
+" @Revision:    510
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 114
@@ -94,8 +94,25 @@ endif
 
 
 if !exists('g:autolinker#special_protocols')
-    " Open links matching this rx with |g:autolinker#system_browser|.
-    let g:autolinker#system_rx = '\%(^\%(https\?\|nntp\|mailto\):\|\.\%(xlsx\?\|docx\?\|pptx\?\|accdb\|mdb\|sqlite\|pdf\)\)'   "{{{2
+    " A list of |regexp|s matching protocol names that should be handled 
+    " by |g:autolinker#system_browser|.
+    " CAVEAT: Must be a |\V| |regexp|.
+    let g:autolinker#special_protocols = ['https\?', 'nntp', 'mailto']   "{{{2
+endif
+
+
+if !exists('g:autolinker#special_suffixes')
+    " A list of |regexp|s matching suffixes that should be handled by 
+    " |g:autolinker#system_browser|.
+    " CAVEAT: Must be a |\V| |regexp|.
+    let g:autolinker#special_suffixes = ['xlsx\?', 'docx\?', 'pptx\?', 'accdb', 'mdb', 'sqlite', 'pdf', 'jpg', 'png', 'gif']    "{{{2
+endif
+
+
+if !exists('g:autolinker#system_rx')
+    " Open links matching this |regexp| with |g:autolinker#system_browser|.
+    " CAVEAT: Must be a |\V| |regexp|.
+    let g:autolinker#system_rx = printf('\V\%(\^\%(%s\):\|.\%(%s\)\)', join(g:autolinker#special_protocols, '\|'), join(g:autolinker#special_suffixes, '\|'))   "{{{2
 endif
 
 
@@ -201,6 +218,8 @@ function! s:prototype.InstallHotkey() abort dict "{{{3
     if !empty(g:autolinker#xmap)
         exec 'silent! xnoremap <buffer>' g:autolinker#xmap '""y:call autolinker#Jump("v")<cr>'
     endif
+    nnoremap ]gz :<C-U>call autolinker#NextLink(v:count1)<cr>
+    nnoremap [gz :<C-U>call autolinker#NextLink(- v:count1)<cr>
 endf
 
 
@@ -457,4 +476,26 @@ function! autolinker#EditInPath(cfile) abort "{{{3
     endif
 endf
 
+
+function! s:GetRx() abort "{{{3
+    if !exists('b:autolinker')
+        return ''
+    else
+        let defs_rx = join(map(values(b:autolinker.defs), 'v:val.rx'), '\|')
+        let prots = join(g:autolinker#special_protocols, '\|')
+        return printf('\(%s\|%s\)', defs_rx, prots)
+    endif
+endf
+
+
+function! autolinker#NextLink(n) abort "{{{3
+    let rx = s:GetRx()
+    let n = abs(a:n)
+    let flags = 'sw'. (a:n < 0 ? 'b' : '')
+    for i in range(n)
+        if !search(rx, flags)
+            break
+        endif
+    endfor
+endf
 
