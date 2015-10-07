@@ -67,6 +67,8 @@ Contents~
         g:autolinker#nmap ................... |g:autolinker#nmap|
         g:autolinker#imap ................... |g:autolinker#imap|
         g:autolinker#xmap ................... |g:autolinker#xmap|
+        g:autolinker#map_forward ............ |g:autolinker#map_forward|
+        g:autolinker#map_backward ........... |g:autolinker#map_backward|
         g:autolinker#edit ................... |g:autolinker#edit|
         g:autolinker#tag .................... |g:autolinker#tag|
         g:autolinker#fallback ............... |g:autolinker#fallback|
@@ -81,8 +83,6 @@ Contents~
         prototype.Dirname
         prototype.Rootname
         prototype.InstallHotkey
-        n_]gz ............................... |n_]gz|
-        n_[gz ............................... |n_[gz|
         prototype.Highlight
         prototype.Edit
         prototype.CleanCWord
@@ -185,12 +185,18 @@ g:autolinker#imap              (default: '<unique> <c-cr>')
 g:autolinker#xmap              (default: g:autolinker#nmap)
     Visual mode map.
 
+                                                    *g:autolinker#map_forward*
+g:autolinker#map_forward       (default: ']'. g:autolinker#nmap)
+
+                                                    *g:autolinker#map_backward*
+g:autolinker#map_backward      (default: '['. g:autolinker#nmap)
+
                                                     *g:autolinker#edit*
 g:autolinker#edit              (default: 'tab drop')
     Command for editing files.
 
                                                     *g:autolinker#tag*
-g:autolinker#tag               (default: 'tag')
+g:autolinker#tag               (default: 'tselect')
 
                                                     *g:autolinker#fallback*
 g:autolinker#fallback          (default: ':call autolinker#EditInPath("%s"),gf')
@@ -249,12 +255,6 @@ prototype.Dirname
 prototype.Rootname
 
 prototype.InstallHotkey
-
-                                                    *n_]gz*
-n_]gz ... :<C-U>call autolinker#NextLink(v:count1)<cr>
-
-                                                    *n_[gz*
-n_[gz ... :<C-U>call autolinker#NextLink(- v:count1)<cr>
 
 prototype.Highlight
 

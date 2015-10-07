@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-10-06
-" @Revision:    510
+" @Last Change: 2015-10-07
+" @Revision:    517
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 114
@@ -58,6 +58,16 @@ if !exists('g:autolinker#xmap')
 endif
 
 
+if !exists('g:autolinker#map_forward')
+    let g:autolinker#map_forward = ']'. g:autolinker#nmap   "{{{2
+endif
+
+
+if !exists('g:autolinker#map_backward')
+    let g:autolinker#map_backward = '['. g:autolinker#nmap   "{{{2
+endif
+
+
 if !exists('g:autolinker#edit')
     " Command for editing files.
     let g:autolinker#edit = 'tab drop'   "{{{2
@@ -65,7 +75,7 @@ endif
 
 
 if !exists('g:autolinker#tag')
-    let g:autolinker#tag = 'tag'   "{{{2
+    let g:autolinker#tag = 'tselect'   "{{{2
 endif
 
 
@@ -218,8 +228,12 @@ function! s:prototype.InstallHotkey() abort dict "{{{3
     if !empty(g:autolinker#xmap)
         exec 'silent! xnoremap <buffer>' g:autolinker#xmap '""y:call autolinker#Jump("v")<cr>'
     endif
-    nnoremap ]gz :<C-U>call autolinker#NextLink(v:count1)<cr>
-    nnoremap [gz :<C-U>call autolinker#NextLink(- v:count1)<cr>
+    if !empty(g:autolinker#map_forward)
+        exec 'silent! nnoremap' g:autolinker#map_forward ':<C-U>call autolinker#NextLink(v:count1)<cr>'
+    endif
+    if !empty(g:autolinker#map_backward)
+        exec 'silent! nnoremap' g:autolinker#map_backward ':<C-U>call autolinker#NextLink(- v:count1)<cr>'
+    endif
 endf
 
 
