@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-10-07
-" @Revision:    517
+" @Last Change: 2015-10-10
+" @Revision:    525
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 114
@@ -147,9 +147,14 @@ endif
 
 
 if !exists('g:autolinker#cfile_gsub')
-    " A list of lists [RX, SUB] that are applied to the |<cfile>| under 
-    " the cursor. This can be used to rewrite filenames and URLs, in 
-    " order to implement e.g. interwikis.
+    " A list of lists [RX, SUB, optional: {OPT => VALUE}] that are 
+    " applied to the |<cfile>| under the cursor. This can be used to 
+    " rewrite filenames and URLs, in order to implement e.g. interwikis.
+    "
+    " Options:
+    "   flags = 'g' ... flags for |substitute()|
+    "   stop = 0 ...... Don't process other gsubs when this |regexp| 
+    "                   matches
     let g:autolinker#cfile_gsub = []   "{{{2
 endif
 
@@ -293,7 +298,11 @@ function! s:prototype.CleanCFile(text) abort dict "{{{3
     endif
     for [rx, sub; rest] in self.cfile_gsub
         let opts = get(rest, 0, {})
-        let text = substitute(text, rx ,sub, get(opts, 'flags', 'g'))
+        let text1 = substitute(text, rx ,sub, get(opts, 'flags', 'g'))
+        if get(opts, 'stop', 0) && text != text1
+            break
+        endif
+        let text = text1
     endfor
     return text
 endf
