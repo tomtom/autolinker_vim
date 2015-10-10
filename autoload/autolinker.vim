@@ -2,7 +2,7 @@
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Last Change: 2015-10-10
-" @Revision:    525
+" @Revision:    528
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 114
@@ -155,6 +155,11 @@ if !exists('g:autolinker#cfile_gsub')
     "   flags = 'g' ... flags for |substitute()|
     "   stop = 0 ...... Don't process other gsubs when this |regexp| 
     "                   matches
+    "
+    " Examples:
+    " ["wiki/", "~/MyWiki/"] ... Redirect to wiki
+    " ["todo://", "~/data/simpletask/"] ... Use todo pseudo-protocol as 
+    "                            used by the simpletasks app
     let g:autolinker#cfile_gsub = []   "{{{2
 endif
 

@@ -253,6 +253,11 @@ g:autolinker#cfile_gsub        (default: [])
       stop = 0 ...... Don't process other gsubs when this |regexp| 
                       matches
 
+    Examples:
+    ["wiki/", "~/MyWiki/"] ... Redirect to wiki
+    ["todo://", "~/data/simpletask/"] ... Use todo pseudo-protocol as 
+                               used by the simpletasks app
+
 prototype.WordLinks
 
 prototype.Dirname
