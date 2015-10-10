@@ -244,9 +244,14 @@ g:autolinker#system_browser    (default: "exec 'silent !'. g:netrw_browsex_viewe
 
                                                     *g:autolinker#cfile_gsub*
 g:autolinker#cfile_gsub        (default: [])
-    A list of lists [RX, SUB] that are applied to the |<cfile>| under 
-    the cursor. This can be used to rewrite filenames and URLs, in 
-    order to implement e.g. interwikis.
+    A list of lists [RX, SUB, optional: {OPT => VALUE}] that are 
+    applied to the |<cfile>| under the cursor. This can be used to 
+    rewrite filenames and URLs, in order to implement e.g. interwikis.
+
+    Options:
+      flags = 'g' ... flags for |substitute()|
+      stop = 0 ...... Don't process other gsubs when this |regexp| 
+                      matches
 
 prototype.WordLinks
 
