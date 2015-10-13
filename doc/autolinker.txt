@@ -6,11 +6,13 @@ Features:
     - Call |:Autolinkbuffer| to enable autolinker for the current buffer 
       or check the definitions of |g:autolinker_filetypes| and 
       |g:autolinker_patterns|.
-    - Jump to files in the current directory and highlight potential hyperlinks
+    - Jump to files in the current directory
     - Jump to files in 'path'
     - Jump to tags
     - Invoke URLs
+    - Highlight potential hyperlinks (doesn't work with all filetypes)
     - Use a fallback command (e.g. create inexistent files)
+    - Special support for markdown (incl. link maps), viki files
 
 The default map is `gz` in normal and visual mode (see |g:autolinker#nmap| and 
 |g:autolinker#xmap|). In insert mode, is is <c-cr> if the key is yet unmapped 
@@ -20,7 +22,7 @@ Differences to |gf|:
 
     - Customizable & extensible
     - Supports several methods
-    - Highlight some potential hyperlinks
+    - Highlight some potential hyperlinks if possible
     - When there are multiple potential matches, users can select the right 
       file from a list
 
@@ -45,12 +47,13 @@ Also available on https://github.com/tomtom/autolinker_vim
 ========================================================================
 Contents~
 
-        g:autolinker_filetypes .............. |g:autolinker_filetypes|
-        g:autolinker_patterns ............... |g:autolinker_patterns|
-        :Albuffer ........................... |:Albuffer|
-        :Aledit ............................. |:Aledit|
+        g:autolinker_filetypes ................ |g:autolinker_filetypes|
+        g:autolinker_patterns ................. |g:autolinker_patterns|
+        :Albuffer ............................. |:Albuffer|
+        :Aledit ............................... |:Aledit|
         prototype.CleanCFile
-        autolinker#ft_viki#GetInstance ...... |autolinker#ft_viki#GetInstance()|
+        prototype.IsInternalLink
+        autolinker#ft_viki#GetInstance ........ |autolinker#ft_viki#GetInstance()|
         prototype.Dispatch
         prototype.BaseNameLinks
         prototype.Dirname
@@ -61,24 +64,23 @@ Contents~
         prototype.Jump_path
         prototype.Jump_tag
         prototype.Jump_fallback
-        g:autolinker#use_highlight .......... |g:autolinker#use_highlight|
-        g:autolinker#url_rx ................. |g:autolinker#url_rx|
-        g:autolinker#types .................. |g:autolinker#types|
-        g:autolinker#nmap ................... |g:autolinker#nmap|
-        g:autolinker#imap ................... |g:autolinker#imap|
-        g:autolinker#xmap ................... |g:autolinker#xmap|
-        g:autolinker#map_forward ............ |g:autolinker#map_forward|
-        g:autolinker#map_backward ........... |g:autolinker#map_backward|
-        g:autolinker#edit ................... |g:autolinker#edit|
-        g:autolinker#tag .................... |g:autolinker#tag|
-        g:autolinker#fallback ............... |g:autolinker#fallback|
-        g:autolinker#index .................. |g:autolinker#index|
-        g:autolinker#special_protocols ...... |g:autolinker#special_protocols|
-        g:autolinker#special_suffixes ....... |g:autolinker#special_suffixes|
-        g:autolinker#system_rx .............. |g:autolinker#system_rx|
-        g:autolinker#system_browser ......... |g:autolinker#system_browser|
-        g:autolinker#system_browser ......... |g:autolinker#system_browser|
-        g:autolinker#cfile_gsub ............. |g:autolinker#cfile_gsub|
+        prototype.CleanCFile
+        prototype.JumpInternalLink
+        prototype.IsInternalLink
+        autolinker#ft_markdown#GetInstance .... |autolinker#ft_markdown#GetInstance()|
+        g:autolinker#use_highlight ............ |g:autolinker#use_highlight|
+        g:autolinker#url_rx ................... |g:autolinker#url_rx|
+        g:autolinker#types .................... |g:autolinker#types|
+        g:autolinker#nmap ..................... |g:autolinker#nmap|
+        g:autolinker#imap ..................... |g:autolinker#imap|
+        g:autolinker#xmap ..................... |g:autolinker#xmap|
+        g:autolinker#map_forward .............. |g:autolinker#map_forward|
+        g:autolinker#map_backward ............. |g:autolinker#map_backward|
+        g:autolinker#edit ..................... |g:autolinker#edit|
+        g:autolinker#tag ...................... |g:autolinker#tag|
+        g:autolinker#fallback ................. |g:autolinker#fallback|
+        g:autolinker#index .................... |g:autolinker#index|
+        g:autolinker#cfile_gsub ............... |g:autolinker#cfile_gsub|
         prototype.WordLinks
         prototype.Dirname
         prototype.Rootname
@@ -87,17 +89,20 @@ Contents~
         prototype.Edit
         prototype.CleanCWord
         prototype.CleanCFile
+        prototype.IsInternalLink
+        prototype.JumpInternalLink
+        prototype.Jump_internal
         prototype.Jump_system
         prototype.Jump_def
         prototype.Jump_path
         prototype.Jump_tag
         prototype.Jump_fallback
-        autolinker#Ensure ................... |autolinker#Ensure()|
-        autolinker#EnableBuffer ............. |autolinker#EnableBuffer()|
-        autolinker#Jump ..................... |autolinker#Jump()|
-        autolinker#Edit ..................... |autolinker#Edit()|
-        autolinker#EditInPath ............... |autolinker#EditInPath()|
-        autolinker#NextLink ................. |autolinker#NextLink()|
+        autolinker#Ensure ..................... |autolinker#Ensure()|
+        autolinker#EnableBuffer ............... |autolinker#EnableBuffer()|
+        autolinker#Jump ....................... |autolinker#Jump()|
+        autolinker#Edit ....................... |autolinker#Edit()|
+        autolinker#EditInPath ................. |autolinker#EditInPath()|
+        autolinker#NextLink ................... |autolinker#NextLink()|
 
 
 ========================================================================
@@ -122,6 +127,8 @@ g:autolinker_patterns          (default: ['*.txt', '*.TXT', '*.md', '*.markdown'
 autoload/autolinker/ft_viki.vim~
 
 prototype.CleanCFile
+
+prototype.IsInternalLink
 
                                                     *autolinker#ft_viki#GetInstance()*
 autolinker#ft_viki#GetInstance(prototype)
@@ -152,6 +159,19 @@ prototype.Jump_fallback
 
 
 ========================================================================
+autoload/autolinker/ft_markdown.vim~
+
+prototype.CleanCFile
+
+prototype.JumpInternalLink
+
+prototype.IsInternalLink
+
+                                                    *autolinker#ft_markdown#GetInstance()*
+autolinker#ft_markdown#GetInstance(prototype)
+
+
+========================================================================
 autoload/autolinker.vim~
 
                                                     *g:autolinker#use_highlight*
@@ -164,8 +184,9 @@ g:autolinker#use_highlight     (default: ['word', 'url'])
 g:autolinker#url_rx            (default: '\l\{2,6}://[-./[:alnum:]_~%#?&]\+')
 
                                                     *g:autolinker#types*
-g:autolinker#types             (default: ['system', 'path', 'def', 'tag', 'fallback'])
+g:autolinker#types             (default: ['internal', 'system', 'path', 'def', 'tag', 'fallback'])
     Possible values (the order is significant):
+    - internal (a document-internal reference)
     - system (URLs, non-text files etc. matching 
       |g:autolinker#system_rx|)
     - def (files in the current directory)
@@ -218,30 +239,6 @@ g:autolinker#index             (default: '"index.". expand("%:e")')
     When opening directories, check whether a file with that name 
     exists. If so, open that file instead of the directory.
 
-                                                    *g:autolinker#special_protocols*
-g:autolinker#special_protocols (default: ['https\?', 'nntp', 'mailto'])
-    A list of |regexp|s matching protocol names that should be handled 
-    by |g:autolinker#system_browser|.
-    CAVEAT: Must be a |\V| |regexp|.
-
-                                                    *g:autolinker#special_suffixes*
-g:autolinker#special_suffixes  (default: ['xlsx\?', 'docx\?', 'pptx\?', 'accdb', 'mdb', 'sqlite', 'pdf', 'jpg', 'png', 'gif'])
-    A list of |regexp|s matching suffixes that should be handled by 
-    |g:autolinker#system_browser|.
-    CAVEAT: Must be a |\V| |regexp|.
-
-                                                    *g:autolinker#system_rx*
-g:autolinker#system_rx         (default: printf('\V\%(\^\%(%s\):\|.\%(%s\)\)', join(g:autolinker#special_protocols, '\|'), join(g:autolinker#special_suffixes, '\|')))
-    Open links matching this |regexp| with |g:autolinker#system_browser|.
-    CAVEAT: Must be a |\V| |regexp|.
-
-                                                    *g:autolinker#system_browser*
-g:autolinker#system_browser    (default: ...)
-    Open files in the system browser.
-
-                                                    *g:autolinker#system_browser*
-g:autolinker#system_browser    (default: "exec 'silent !'. g:netrw_browsex_viewer shellescape('%s')")
-
                                                     *g:autolinker#cfile_gsub*
 g:autolinker#cfile_gsub        (default: [])
     A list of lists [RX, SUB, optional: {OPT => VALUE}] that are 
@@ -273,6 +270,12 @@ prototype.Edit
 prototype.CleanCWord
 
 prototype.CleanCFile
+
+prototype.IsInternalLink
+
+prototype.JumpInternalLink
+
+prototype.Jump_internal
 
 prototype.Jump_system
 
