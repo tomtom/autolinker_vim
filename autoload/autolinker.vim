@@ -448,8 +448,11 @@ endf
 
 
 function! autolinker#EditInPath(cfile) abort "{{{3
-    let filenames = map(split(&path, ','), 'tlib#file#Join([v:val, a:cfile])')
+    let path = filter(split(&path, ','), '!empty(v:val)')
+    let filenames = map(path, 'tlib#file#Join([v:val, a:cfile], 1, 1)')
     call insert(filenames, a:cfile)
+    let filenames = map(filenames, 'fnamemodify(v:val, ":p")')
+    let filenames = tlib#list#Uniq(filenames)
     let filename = tlib#input#List('s', 'Select file:', filenames)
     if !empty(filename)
         exec g:autolinker#edit fnameescape(filename)
