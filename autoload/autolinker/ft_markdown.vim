@@ -2,7 +2,7 @@
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Last Change: 2015-10-13
-" @Revision:    31
+" @Revision:    40
 
 
 let s:prototype = {}
@@ -12,6 +12,19 @@ function! s:prototype.CleanCFile(cfile) abort dict "{{{3
     let cfile = self.Markdown_Super_CleanCFile(a:cfile)
     let cfile = s:GetLinkMapLink(cfile)
     return cfile
+endf
+
+
+function! s:prototype.JumpInternalLink(cfile) abort dict "{{{3
+    let rx = printf('\V\%(\^\s\*%s\>\|\<id\s\*=\s\*\["'']\?%s\>\)',
+                \ tlib#rx#Escape(a:cfile, 'V'),
+                \ tlib#rx#Escape(substitute(a:cfile, '^#', '', ''), 'V'))
+    return search(rx, 'cw') > 0
+endf
+
+
+function! s:prototype.IsInternalLink(cfile) abort dict "{{{3
+    return a:cfile =~ '^#\S\+$'
 endf
 
 

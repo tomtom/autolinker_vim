@@ -6,11 +6,13 @@ Features:
     - Call |:Autolinkbuffer| to enable autolinker for the current buffer 
       or check the definitions of |g:autolinker_filetypes| and 
       |g:autolinker_patterns|.
-    - Jump to files in the current directory and highlight potential hyperlinks
+    - Jump to files in the current directory
     - Jump to files in 'path'
     - Jump to tags
     - Invoke URLs
+    - Highlight potential hyperlinks (doesn't work with all filetypes)
     - Use a fallback command (e.g. create inexistent files)
+    - Special support for markdown (incl. link maps), viki files
 
 The default map is `gz` in normal and visual mode (see |g:autolinker#nmap| and 
 |g:autolinker#xmap|). In insert mode, is is <c-cr> if the key is yet unmapped 
@@ -20,7 +22,7 @@ Differences to |gf|:
 
     - Customizable & extensible
     - Supports several methods
-    - Highlight some potential hyperlinks
+    - Highlight some potential hyperlinks if possible
     - When there are multiple potential matches, users can select the right 
       file from a list
 

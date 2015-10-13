@@ -2,7 +2,7 @@
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Last Change: 2015-10-13
-" @Revision:    546
+" @Revision:    556
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -30,13 +30,14 @@ endif
 
 if !exists('g:autolinker#types')
     " Possible values (the order is significant):
+    " - internal (a document-internal reference)
     " - system (URLs, non-text files etc. matching 
     "   |g:autolinker#system_rx|)
     " - def (files in the current directory)
     " - path (files in 'path')
     " - tag (tags)
     " - fallback (see |g:autolinker#fallback|)
-    let g:autolinker#types = ['system', 'path', 'def', 'tag', 'fallback']   "{{{2
+    let g:autolinker#types = ['internal', 'system', 'path', 'def', 'tag', 'fallback']   "{{{2
 endif
 
 
@@ -267,6 +268,21 @@ function! s:prototype.CleanCFile(text) abort dict "{{{3
         let text = text1
     endfor
     return text
+endf
+
+
+function! s:prototype.IsInternalLink(cfile) abort dict "{{{3
+    return 0
+endf
+
+
+function! s:prototype.JumpInternalLink(cfile) abort dict "{{{3
+    return search('\V\^\s\*'. tlib#rx#Escape(a:cfile, 'V') .'\>') > 0
+endf
+
+
+function! s:prototype.Jump_internal(mode, cword, cfile) abort dict "{{{3
+    return self.IsInternalLink(a:cfile) && self.JumpInternalLink(a:cfile)
 endf
 
 
