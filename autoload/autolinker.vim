@@ -2,7 +2,7 @@
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Last Change: 2015-10-13
-" @Revision:    539
+" @Revision:    546
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -389,11 +389,19 @@ function! autolinker#EnableBuffer() abort "{{{3
     let ft = &ft
     if !has_key(s:ft_prototypes, ft)
         let prototype = deepcopy(s:prototype)
-        try
-            let s:ft_prototypes[ft] = autolinker#ft_{ft}#GetInstance(prototype)
-        catch /^Vim\%((\a\+)\)\=:E117/
-            let s:ft_prototypes[ft] = prototype
-        endtry
+        for fft in [ft, substitute(ft, '\..\+$', '', ''), '']
+            if empty(fft)
+                let s:ft_prototypes[ft] = prototype
+            else
+                try
+                    let fft_ = substitute(fft, '\W', '_', 'g')
+                    let s:ft_prototypes[ft] = autolinker#ft_{fft_}#GetInstance(prototype)
+                catch /^Vim\%((\a\+)\)\=:E117/
+                    continue
+                endtry
+            endif
+            break
+        endfor
     endif
     let b:autolinker = copy(s:ft_prototypes[ft])
     let b:autolinker.defs = b:autolinker.WordLinks()
