@@ -103,49 +103,6 @@ if !exists('g:autolinker#index')
 endif
 
 
-if !exists('g:autolinker#special_protocols')
-    " A list of |regexp|s matching protocol names that should be handled 
-    " by |g:autolinker#system_browser|.
-    " CAVEAT: Must be a |\V| |regexp|.
-    let g:autolinker#special_protocols = ['https\?', 'nntp', 'mailto']   "{{{2
-endif
-
-
-if !exists('g:autolinker#special_suffixes')
-    " A list of |regexp|s matching suffixes that should be handled by 
-    " |g:autolinker#system_browser|.
-    " CAVEAT: Must be a |\V| |regexp|.
-    let g:autolinker#special_suffixes = ['xlsx\?', 'docx\?', 'pptx\?', 'accdb', 'mdb', 'sqlite', 'pdf', 'jpg', 'png', 'gif']    "{{{2
-endif
-
-
-if !exists('g:autolinker#system_rx')
-    " Open links matching this |regexp| with |g:autolinker#system_browser|.
-    " CAVEAT: Must be a |\V| |regexp|.
-    let g:autolinker#system_rx = printf('\V\%(\^\%(%s\):\|.\%(%s\)\)', join(g:autolinker#special_protocols, '\|'), join(g:autolinker#special_suffixes, '\|'))   "{{{2
-endif
-
-
-if !exists("g:autolinker#system_browser")
-    if exists('g:netrw_browsex_viewer')
-        " Open files in the system browser.
-        " :read: let g:autolinker#system_browser = ... "{{{2
-        let g:autolinker#system_browser = "exec 'silent !'. g:netrw_browsex_viewer shellescape('%s')" "{{{2
-    elseif has("win32") || has("win16") || has("win64")
-        " let g:autolinker#system_browser = "exec 'silent ! start \"\"' shellescape('%s')"
-        let g:autolinker#system_browser = "exec 'silent ! RunDll32.EXE URL.DLL,FileProtocolHandler' shellescape('%s')"
-    elseif has("mac")
-        let g:autolinker#system_browser = "exec 'silent !open' shellescape('%s')"
-    elseif exists('$XDG_CURRENT_DESKTOP') && !empty($XDG_CURRENT_DESKTOP)
-        let g:autolinker#system_browser = "exec 'silent !xdg-open' shellescape('%s') .'&'"
-    elseif $GNOME_DESKTOP_SESSION_ID != "" || $DESKTOP_SESSION == 'gnome'
-        let g:autolinker#system_browser = "exec 'silent !gnome-open' shellescape('%s')"
-    elseif exists("$KDEDIR") && !empty($KDEDIR)
-        let g:autolinker#system_browser = "exec 'silent !kfmclient exec' shellescape('%s')"
-    endif
-endif
-
-
 if !exists('g:autolinker#cfile_gsub')
     " A list of lists [RX, SUB, optional: {OPT => VALUE}] that are 
     " applied to the |<cfile>| under the cursor. This can be used to 
@@ -315,13 +272,7 @@ endf
 
 function! s:prototype.Jump_system(mode, cword, cfile) abort dict "{{{3
     " TLogVAR a:mode, a:cword, a:cfile
-    if a:cfile =~ g:autolinker#system_rx
-        let cmd = printf(g:autolinker#system_browser, escape(a:cfile, ' %#!'))
-        exec cmd
-        return 1
-    else
-        return 0
-    endif
+    return tlib#sys#Open(a:cfile)
 endf
 
 
