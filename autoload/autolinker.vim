@@ -260,7 +260,7 @@ function! s:prototype.CleanCFile(text) abort dict "{{{3
     endif
     for [rx, sub; rest] in self.cfile_gsub
         let opts = get(rest, 0, {})
-        let text1 = substitute(text, rx ,sub, get(opts, 'flags', 'g'))
+        let text1 = substitute(text, rx, sub, get(opts, 'flags', 'g'))
         if get(opts, 'stop', 0) && text != text1
             break
         endif
