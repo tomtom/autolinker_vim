@@ -1,8 +1,8 @@
 " @Author:      Thomas Link (micathom AT gmail.com)
 " @GIT:         http://github.com/tomtom/autolinker_vim/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-10-02.
-" @Revision:    59
+" @Last Change: 2015-10-14.
+" @Revision:    64
 " GetLatestVimScripts: 5253 0 :AutoInstall: autolinker.vim
 " Automatic hyperlinks for any filetype
 
@@ -31,6 +31,14 @@ if exists('g:autolinker_patterns_user')
 endif
 
 
+if !exists('g:autolinker_exclude_filetypes')
+    " Don't enable autolinker for filetypes matching this |regexp| 
+    " even when the filename matches |g:autolinker_patterns|.
+    let g:autolinker_exclude_filetypes_rx = ''   "{{{2
+endif
+
+
+
 " :nodoc:
 let g:autolinker_glob_cache = {}
 
@@ -44,8 +52,8 @@ augroup AutoLinker
     autocmd BufWritePre,FileWritePre * if index(g:autolinker_filetypes, &ft, 0, 0) != -1 && !filereadable(expand("<afile>")) | Alcachereset | endif
     autocmd BufWinEnter * if index(g:autolinker_filetypes, &ft, 0, 0) != -1 | call autolinker#Ensure() | endif
     for s:item in g:autolinker_patterns
-        exec 'autocmd BufWinEnter' s:item 'call autolinker#Ensure()'
-        exec 'autocmd BufWritePre,FileWritePre' s:item 'if !filereadable(expand("<afile>")) | Alcachereset | endif'
+        exec 'autocmd BufWinEnter' s:item 'if empty(g:autolinker_exclude_filetypes_rx) || &filetype !~? g:autolinker_exclude_filetypes_rx | call autolinker#Ensure() | endif'
+        exec 'autocmd BufWritePre,FileWritePre' s:item 'if (empty(g:autolinker_exclude_filetypes_rx) || &filetype !~? g:autolinker_exclude_filetypes_rx) && !filereadable(expand("<afile>")) | Alcachereset | endif'
     endfor
     unlet! s:item
 augroup end

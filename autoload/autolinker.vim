@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-10-13
-" @Revision:    556
+" @Last Change: 2015-10-21
+" @Revision:    650
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -18,7 +18,8 @@ if !exists('g:autolinker#use_highlight')
     " Items that should be highlighted as hyperlinks:
     " - word
     " - url
-    let g:autolinker#use_highlight = ['word', 'url']   "{{{2
+    " - cfile_gsub
+    let g:autolinker#use_highlight = ['word', 'url', 'cfile_gsub']   "{{{2
 endif
 
 
@@ -69,9 +70,21 @@ if !exists('g:autolinker#map_backward')
 endif
 
 
+if !exists('g:autolinker#map_options')
+    " Call this map with a count and a char (w = window, t = tab, s = 
+    " split, v = vertical split) to define where the destination should 
+    " be displayed.
+    "
+    " Let's assume |maplocalleader| is '\'. Then, e.g.,
+    "   \asgz .... Open the destination in a split buffer
+    "   2\awgz ... Open the destination in the second window
+    let g:autolinker#map_options = '<LocalLeader>a%s'   "{{{2
+endif
+
+
 if !exists('g:autolinker#edit')
     " Command for editing files.
-    let g:autolinker#edit = 'tab drop'   "{{{2
+    let g:autolinker#edit = {'*': 'tab drop', 'w': '<count>wincmd w | edit', 't': '<count>tabn | edit', 's': '<count>split', 'v': 'vert <count>split'}   "{{{2
 endif
 
 
@@ -92,7 +105,7 @@ if !exists('g:autolinker#fallback')
     " Possible values are:
     " - gf
     " - ':'. g:autolinker#edit (if you want to create new files)
-    let g:autolinker#fallback = ':call autolinker#EditInPath("%s"),gf'   "{{{2
+    let g:autolinker#fallback = ':call autolinker#EditInPath("%s"),gf,gx'   "{{{2
 endif
 
 
@@ -109,16 +122,25 @@ if !exists('g:autolinker#cfile_gsub')
     " applied to the |<cfile>| under the cursor. This can be used to 
     " rewrite filenames and URLs, in order to implement e.g. interwikis.
     "
+    " RX must be a |magic| |regexp|.
+    "
     " Options:
     "   flags = 'g' ... flags for |substitute()|
     "   stop = 0 ...... Don't process other gsubs when this |regexp| 
     "                   matches
     "
     " Examples:
-    " ["wiki/", "~/MyWiki/"] ... Redirect to wiki
-    " ["todo://", "~/data/simpletask/"] ... Use todo pseudo-protocol as 
-    "                            used by the simpletasks app
+    " ["^wiki/", "~/MyWiki/"] .... Redirect to wiki
+    " ["^NOTES::", "~/Notes/"] ... Interviki syntax
+    " ["^todo://", "~/data/simpletask/"] ... Use todo pseudo-protocol as 
+    "                              used by the simpletasks app
     let g:autolinker#cfile_gsub = []   "{{{2
+endif
+
+
+if !exists('g:autolinker#cfile_stop_characters')
+    " See |/[]|.
+    let g:autolinker#cfile_stop_characters = '])},;.:-'   "{{{2
 endif
 
 
@@ -126,6 +148,7 @@ let s:prototype = {'fallback': g:autolinker#fallback
             \ , 'types': g:autolinker#types
             \ , 'use_highlight': g:autolinker#use_highlight
             \ , 'cfile_gsub': g:autolinker#cfile_gsub
+            \ , 'cfile_stop_characters': g:autolinker#cfile_stop_characters
             \ }
 
 
@@ -186,6 +209,25 @@ function! s:prototype.Rootname() abort dict "{{{3
 endf
 
 
+function! s:prototype.UninstallHotkey() abort dict "{{{3
+    if !empty(g:autolinker#nmap)
+        exec 'silent! nunmap <buffer>' g:autolinker#nmap
+    endif
+    if !empty(g:autolinker#imap)
+        exec 'silent! iunmap <buffer>' g:autolinker#imap
+    endif
+    if !empty(g:autolinker#xmap)
+        exec 'silent! xunmap <buffer>' g:autolinker#xmap
+    endif
+    if !empty(g:autolinker#map_forward)
+        exec 'silent! nunmap' g:autolinker#map_forward
+    endif
+    if !empty(g:autolinker#map_backward)
+        exec 'silent! nunmap' g:autolinker#map_backward
+    endif
+endf
+
+
 function! s:prototype.InstallHotkey() abort dict "{{{3
     if !empty(g:autolinker#nmap)
         exec 'silent! nnoremap <buffer>' g:autolinker#nmap ':call autolinker#Jump("n")<cr>'
@@ -205,10 +247,29 @@ function! s:prototype.InstallHotkey() abort dict "{{{3
 endf
 
 
+function! s:prototype.ClearHighlight() abort dict "{{{3
+    silent! syn clear AutoHyperlink
+endf
+
+
+function! s:prototype.CfileGsubRx(add_f) abort dict "{{{3
+    let crx = []
+    for [rx, subst; rest] in self.cfile_gsub
+        let rxs = substitute(rx, '\^', '\\<', 'g')
+        let rxs = '\m'. escape(rxs, '/') .'\f*'
+        if a:add_f
+            let rxs .= '\f*'
+        endif
+        call add(crx, rxs)
+    endfor
+    return empty(crx) ? '' : printf('\%%(%s\)', join(crx, '\|'))
+endf
+
+
 function! s:prototype.Highlight() abort dict "{{{3
     if !empty(self.use_highlight)
         if index(self.use_highlight, 'word')
-            silent! syn clear AutoHyperlink
+            call self.ClearHighlight()
             let rx = join(map(values(self.defs), 'v:val.rx'), '\|')
             if !empty(rx)
                 exec 'syn match AutoHyperlink /'. escape(rx, '/') .'/'
@@ -216,6 +277,12 @@ function! s:prototype.Highlight() abort dict "{{{3
         endif
         if index(self.use_highlight, 'url')
             exec 'syn match AutoHyperlink /'. escape(g:autolinker#url_rx, '/') .'/'
+        endif
+        if index(self.use_highlight, 'cfile_gsub')
+            let crx = self.CfileGsubRx(1)
+            if !empty(crx)
+                exec 'syn match AutoHyperlink /'. crx .'/'
+            endif
         endif
         " let col = &background == 'dark' ? 'Cyan' : 'DarkBlue'
         " exec 'hi AutoHyperlink term=underline cterm=underline gui=underline ctermfg='. col 'guifg='. col
@@ -235,7 +302,7 @@ function! s:prototype.Edit(filename) abort dict "{{{3
                     let filename = index
                 endif
             endif
-            exec g:autolinker#edit fnameescape(filename)
+            call s:Edit(filename)
             call autolinker#Ensure()
         endif
         return 1
@@ -256,12 +323,15 @@ endf
 
 function! s:prototype.CleanCFile(text) abort dict "{{{3
     let text = a:text
+    if !empty(self.cfile_stop_characters)
+        let text = substitute(text, '['. self.cfile_stop_characters .'].*$', '', '')
+    endif
     if !empty(&includeexpr)
         let text = eval(substitute(&includeexpr, 'v:fname', string(a:text), 'g'))
     endif
     for [rx, sub; rest] in self.cfile_gsub
         let opts = get(rest, 0, {})
-        let text1 = substitute(text, rx, sub, get(opts, 'flags', 'g'))
+        let text1 = substitute(text, '\m'. rx, sub, get(opts, 'flags', 'g'))
         if get(opts, 'stop', 0) && text != text1
             break
         endif
@@ -282,7 +352,16 @@ endf
 
 
 function! s:prototype.Jump_internal(mode, cword, cfile) abort dict "{{{3
-    return self.IsInternalLink(a:cfile) && self.JumpInternalLink(a:cfile)
+    if self.IsInternalLink(a:cfile)
+        let [edit, special] = s:GetEditCmd()
+        " TLogVAR edit, special
+        if special
+            exec edit fnameescape(expand('%:p'))
+        endif
+        return self.JumpInternalLink(a:cfile)
+    else
+        return 0
+    endif
 endf
 
 
@@ -423,6 +502,17 @@ function! autolinker#EnableBuffer() abort "{{{3
     let b:autolinker.defs = b:autolinker.WordLinks()
     call b:autolinker.Highlight()
     call b:autolinker.InstallHotkey()
+    for c in ['t', 'w', 'v', 's']
+        exec 'nnoremap' printf(g:autolinker#map_options, c) ':<C-U>let w:autolinker_'. c '= v:count<cr>'
+    endfor
+    let b:undo_ftplugin = 'call autolinker#DisableBuffer()'. (exists('b:undo_ftplugin') ? '|'. b:undo_ftplugin : '')
+endf
+
+
+function! autolinker#DisableBuffer() abort "{{{3
+    call b:autolinker.ClearHighlight()
+    call b:autolinker.UninstallHotkey()
+    unlet! b:autolinker
 endf
 
 
@@ -462,6 +552,10 @@ function! s:Jump(mode, cfile, cword) abort "{{{3
         endif
     endfor
     echom 'Autolinker: I can''t dance --' a:cfile
+    let wvars = filter(w:, 'v:val =~ "^autolinker_"')
+    if !empty(wvars)
+        exec 'unlet!' join(keys(map(wvars, '"w:". v:val')))
+    endif
 endf
 
 
@@ -478,9 +572,47 @@ function! autolinker#EditInPath(cfile) abort "{{{3
     let filenames = map(filenames, 'fnamemodify(v:val, ":p")')
     let filenames = tlib#list#Uniq(filenames)
     let filename = tlib#input#List('s', 'Select file:', filenames)
-    if !empty(filename)
-        exec g:autolinker#edit fnameescape(filename)
+    return s:Edit(filename)
+endf
+
+
+function! s:GetEditCmd() abort "{{{3
+    let cnt = ''
+    if exists('w:autolinker_t')
+        let edit = g:autolinker#edit.t
+        let cnt = w:autolinker_t
+        let special = 1
+    elseif exists('w:autolinker_w')
+        let edit = g:autolinker#edit.w
+        let cnt = w:autolinker_w
+        let special = 1
+    elseif exists('w:autolinker_v')
+        let edit = g:autolinker#edit.v
+        let cnt = w:autolinker_v
+        let special = 1
+    elseif exists('w:autolinker_s')
+        let edit = g:autolinker#edit.s
+        let cnt = w:autolinker_s
+        let special = 1
+    else
+        let edit = g:autolinker#edit['*']
+        let special = 0
     endif
+    if cnt == 0
+        let cnt = ''
+    endif
+    let edit = substitute(edit, '<count>', cnt, 'g')
+    return [edit, special]
+endf
+
+
+function! s:Edit(filename) abort "{{{3
+    if !empty(filename)
+        let [edit, special] = s:GetEditCmd()
+        exec edit fnameescape(a:filename)
+        return 1
+    endif
+    return 0
 endf
 
 
@@ -488,9 +620,14 @@ function! s:GetRx() abort "{{{3
     if !exists('b:autolinker')
         return ''
     else
-        let defs_rx = join(map(values(b:autolinker.defs), 'v:val.rx'), '\|')
-        let prots = join(g:autolinker#special_protocols, '\|')
-        return printf('\(%s\|%s\)', defs_rx, prots)
+        let rxs = []
+        let rxs += map(values(b:autolinker.defs), 'v:val.rx')
+        let rxs += g:tlib#sys#special_protocols
+        let crx = b:autolinker.CfileGsubRx(0)
+        if !empty(crx)
+            call add(rxs, crx)
+        endif
+        return printf('\(%s\)', join(rxs, '\|'))
     endif
 endf
 
