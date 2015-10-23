@@ -49,6 +49,7 @@ Contents~
 
         g:autolinker_filetypes ................ |g:autolinker_filetypes|
         g:autolinker_patterns ................. |g:autolinker_patterns|
+        g:autolinker_exclude_filetypes_rx ..... |g:autolinker_exclude_filetypes_rx|
         :Albuffer ............................. |:Albuffer|
         :Aledit ............................... |:Aledit|
         prototype.CleanCFile
@@ -76,15 +77,20 @@ Contents~
         g:autolinker#xmap ..................... |g:autolinker#xmap|
         g:autolinker#map_forward .............. |g:autolinker#map_forward|
         g:autolinker#map_backward ............. |g:autolinker#map_backward|
+        g:autolinker#map_options .............. |g:autolinker#map_options|
         g:autolinker#edit ..................... |g:autolinker#edit|
         g:autolinker#tag ...................... |g:autolinker#tag|
         g:autolinker#fallback ................. |g:autolinker#fallback|
         g:autolinker#index .................... |g:autolinker#index|
         g:autolinker#cfile_gsub ............... |g:autolinker#cfile_gsub|
+        g:autolinker#cfile_stop_characters .... |g:autolinker#cfile_stop_characters|
         prototype.WordLinks
         prototype.Dirname
         prototype.Rootname
+        prototype.UninstallHotkey
         prototype.InstallHotkey
+        prototype.ClearHighlight
+        prototype.CfileGsubRx
         prototype.Highlight
         prototype.Edit
         prototype.CleanCWord
@@ -99,6 +105,7 @@ Contents~
         prototype.Jump_fallback
         autolinker#Ensure ..................... |autolinker#Ensure()|
         autolinker#EnableBuffer ............... |autolinker#EnableBuffer()|
+        autolinker#DisableBuffer .............. |autolinker#DisableBuffer()|
         autolinker#Jump ....................... |autolinker#Jump()|
         autolinker#Edit ....................... |autolinker#Edit()|
         autolinker#EditInPath ................. |autolinker#EditInPath()|
@@ -113,6 +120,11 @@ g:autolinker_filetypes         (default: ['text', 'txt', 'todo', 'todotxt', 'md'
 
                                                     *g:autolinker_patterns*
 g:autolinker_patterns          (default: ['*.txt', '*.TXT', '*.md', '*.markdown'])
+
+                                                    *g:autolinker_exclude_filetypes_rx*
+g:autolinker_exclude_filetypes_rx (default: '')
+    Don't enable autolinker for filetypes matching this |regexp| 
+    even when the filename matches |g:autolinker_patterns|.
 
                                                     *:Albuffer*
 :Albuffer
@@ -175,10 +187,11 @@ autolinker#ft_markdown#GetInstance(prototype)
 autoload/autolinker.vim~
 
                                                     *g:autolinker#use_highlight*
-g:autolinker#use_highlight     (default: ['word', 'url'])
+g:autolinker#use_highlight     (default: ['word', 'url', 'cfile_gsub'])
     Items that should be highlighted as hyperlinks:
     - word
     - url
+    - cfile_gsub
 
                                                     *g:autolinker#url_rx*
 g:autolinker#url_rx            (default: '\l\{2,6}://[-./[:alnum:]_~%#?&]\+')
@@ -212,15 +225,25 @@ g:autolinker#map_forward       (default: ']'. g:autolinker#nmap)
                                                     *g:autolinker#map_backward*
 g:autolinker#map_backward      (default: '['. g:autolinker#nmap)
 
+                                                    *g:autolinker#map_options*
+g:autolinker#map_options       (default: '<LocalLeader>a%s')
+    Call this map with a count and a char (w = window, t = tab, s = 
+    split, v = vertical split) to define where the destination should 
+    be displayed.
+
+    Let's assume |maplocalleader| is '\'. Then, e.g.,
+      \asgz .... Open the destination in a split buffer
+      2\awgz ... Open the destination in the second window
+
                                                     *g:autolinker#edit*
-g:autolinker#edit              (default: 'tab drop')
+g:autolinker#edit              (default: {'*': 'tab drop', 'w': '<count>wincmd w | edit', 't': '<count>tabn | edit', 's': '<count>split', 'v': 'vert <count>split'})
     Command for editing files.
 
                                                     *g:autolinker#tag*
 g:autolinker#tag               (default: 'tselect')
 
                                                     *g:autolinker#fallback*
-g:autolinker#fallback          (default: ':call autolinker#EditInPath("%s"),gf')
+g:autolinker#fallback          (default: ':call autolinker#EditInPath("%s"),gf,gx')
     A comma-separated list of fallback procedures.
     Normal command to run when everything else fails.
     If the command starts with ':', it is an ex command.
@@ -245,15 +268,22 @@ g:autolinker#cfile_gsub        (default: [])
     applied to the |<cfile>| under the cursor. This can be used to 
     rewrite filenames and URLs, in order to implement e.g. interwikis.
 
+    RX must be a |magic| |regexp|.
+
     Options:
       flags = 'g' ... flags for |substitute()|
       stop = 0 ...... Don't process other gsubs when this |regexp| 
                       matches
 
     Examples:
-    ["wiki/", "~/MyWiki/"] ... Redirect to wiki
-    ["todo://", "~/data/simpletask/"] ... Use todo pseudo-protocol as 
-                               used by the simpletasks app
+    ["^wiki/", "~/MyWiki/"] .... Redirect to wiki
+    ["^NOTES::", "~/Notes/"] ... Interviki syntax
+    ["^todo://", "~/data/simpletask/"] ... Use todo pseudo-protocol as 
+                                 used by the simpletasks app
+
+                                                    *g:autolinker#cfile_stop_characters*
+g:autolinker#cfile_stop_characters (default: '])},;.:-')
+    See |/[]|.
 
 prototype.WordLinks
 
@@ -261,7 +291,13 @@ prototype.Dirname
 
 prototype.Rootname
 
+prototype.UninstallHotkey
+
 prototype.InstallHotkey
+
+prototype.ClearHighlight
+
+prototype.CfileGsubRx
 
 prototype.Highlight
 
@@ -292,6 +328,9 @@ autolinker#Ensure()
 
                                                     *autolinker#EnableBuffer()*
 autolinker#EnableBuffer()
+
+                                                    *autolinker#DisableBuffer()*
+autolinker#DisableBuffer()
 
                                                     *autolinker#Jump()*
 autolinker#Jump(mode)
