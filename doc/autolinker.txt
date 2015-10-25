@@ -282,7 +282,7 @@ g:autolinker#cfile_gsub        (default: [])
                                  used by the simpletasks app
 
                                                     *g:autolinker#cfile_stop_characters*
-g:autolinker#cfile_stop_characters (default: '])},;.:-')
+g:autolinker#cfile_stop_characters (default: '])},;')
     See |/[]|.
 
 prototype.WordLinks

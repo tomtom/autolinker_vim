@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-10-21
-" @Revision:    650
+" @Last Change: 2015-10-25
+" @Revision:    659
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -140,7 +140,7 @@ endif
 
 if !exists('g:autolinker#cfile_stop_characters')
     " See |/[]|.
-    let g:autolinker#cfile_stop_characters = '])},;.:-'   "{{{2
+    let g:autolinker#cfile_stop_characters = '])},;'   "{{{2
 endif
 
 
@@ -528,25 +528,28 @@ function! autolinker#Jump(mode) abort "{{{3
     call autolinker#Ensure()
     if stridx('in', a:mode) != -1
         let cfile = expand("<cfile>")
+        " TLogVAR 1, cfile
         let cfile = b:autolinker.CleanCFile(cfile)
+        " TLogVAR 2, cfile
         let cword = expand("<cword>")
         let cword = b:autolinker.CleanCWord(cword)
+        " TLogVAR cword
     elseif a:mode ==# 'v'
         let cfile = @"
         let cword = cfile
     else
         throw 'AutoLinker: Unsupported mode: '. a:mode
     endif
-    " TLogVAR a:mode, cfile, cword
-    call s:Jump(a:mode, cfile, cword)
+    " TLogVAR a:mode, cword, cfile
+    call s:Jump(a:mode, cword, cfile)
 endf
 
 
-function! s:Jump(mode, cfile, cword) abort "{{{3
+function! s:Jump(mode, cword, cfile) abort "{{{3
     let args = [a:mode, a:cword, a:cfile]
     for type in b:autolinker.types
         let method = 'Jump_'. type
-        " TLogVAR method
+        " TLogVAR method, args
         if has_key(b:autolinker, method) && call(b:autolinker[method], args, b:autolinker)
             return
         endif
