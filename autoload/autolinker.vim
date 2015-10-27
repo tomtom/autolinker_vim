@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-10-25
-" @Revision:    659
+" @Last Change: 2015-10-27
+" @Revision:    660
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -610,7 +610,7 @@ endf
 
 
 function! s:Edit(filename) abort "{{{3
-    if !empty(filename)
+    if !empty(a:filename)
         let [edit, special] = s:GetEditCmd()
         exec edit fnameescape(a:filename)
         return 1
