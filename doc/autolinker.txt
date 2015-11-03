@@ -276,10 +276,9 @@ g:autolinker#cfile_gsub        (default: [])
                       matches
 
     Examples:
-    ["^wiki/", "~/MyWiki/"] .... Redirect to wiki
-    ["^NOTES::", "~/Notes/"] ... Interviki syntax
+    ["^WIKI/", "~/MyWiki/"] .............. Redirect to wiki
     ["^todo://", "~/data/simpletask/"] ... Use todo pseudo-protocol as 
-                                 used by the simpletasks app
+                                           used by the simpletasks app
 
                                                     *g:autolinker#cfile_stop_characters*
 g:autolinker#cfile_stop_characters (default: '])},;')

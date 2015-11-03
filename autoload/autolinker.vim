@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-10-27
-" @Revision:    660
+" @Last Change: 2015-11-03
+" @Revision:    663
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -130,10 +130,9 @@ if !exists('g:autolinker#cfile_gsub')
     "                   matches
     "
     " Examples:
-    " ["^wiki/", "~/MyWiki/"] .... Redirect to wiki
-    " ["^NOTES::", "~/Notes/"] ... Interviki syntax
+    " ["^WIKI/", "~/MyWiki/"] .............. Redirect to wiki
     " ["^todo://", "~/data/simpletask/"] ... Use todo pseudo-protocol as 
-    "                              used by the simpletasks app
+    "                                        used by the simpletasks app
     let g:autolinker#cfile_gsub = []   "{{{2
 endif
 
