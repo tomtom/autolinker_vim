@@ -645,3 +645,20 @@ function! autolinker#NextLink(n) abort "{{{3
     endfor
 endf
 
+
+function! autolinker#FileSources(opts) abort "{{{3
+    let globs = []
+    let cfile_gsub = exists('b:autolinker') ? b:autolinker.cfile_gsub : g:autolinker#cfile_gsub
+    let pattern = get(a:opts, 'glob', get(a:opts, 'deep', 1) ? '**' : '*')
+    for [rx, subst; rest] in cfile_gsub
+        if rx =~ '^\^'
+                    \ && (empty(g:autolinker#find_ignore_rx) || rx !~ g:autolinker#find_ignore_rx)
+                    \ && (empty(g:autolinker#find_ignore_subst) || subst !~ g:autolinker#find_ignore_subst)
+            call add(globs, tlib#file#Join([subst, pattern]))
+        endif
+    endfor
+    TLibTrace 'autolinker', globs
+    " TLogVAR globs
+    return globs
+endf
+
