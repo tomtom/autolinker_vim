@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-11-03
-" @Revision:    663
+" @Last Change: 2015-11-05
+" @Revision:    755
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -32,13 +32,16 @@ endif
 if !exists('g:autolinker#types')
     " Possible values (the order is significant):
     " - internal (a document-internal reference)
+    " - fileurl (an encoded URL starting with "file://"; the URL will be 
+    "   decoded and feed to |autolinker#Jump()| as usual; this allows 
+    "   circumventing encoding issues)
     " - system (URLs, non-text files etc. matching 
     "   |g:autolinker#system_rx|)
     " - def (files in the current directory)
     " - path (files in 'path')
     " - tag (tags)
     " - fallback (see |g:autolinker#fallback|)
-    let g:autolinker#types = ['internal', 'system', 'path', 'def', 'tag', 'fallback']   "{{{2
+    let g:autolinker#types = ['internal', 'fileurl', 'system', 'path', 'def', 'tag', 'fallback']   "{{{2
 endif
 
 
@@ -82,9 +85,21 @@ if !exists('g:autolinker#map_options')
 endif
 
 
-if !exists('g:autolinker#edit')
-    " Command for editing files.
-    let g:autolinker#edit = {'*': 'tab drop', 'w': '<count>wincmd w | edit', 't': '<count>tabn | edit', 's': '<count>split', 'v': 'vert <count>split'}   "{{{2
+if !exists('g:autolinker#layout')
+    " Command for working with layouts.
+    let g:autolinker#layout = {'*': ['tab drop', 'fnameescape'], 'w': ['<count>wincmd w'], 't': ['<count>tabn'], 's': ['<count>split'], 'v': ['vert <count>split']}   "{{{2
+endif
+
+
+if !exists('g:autolinker#edit_file')
+    " Command for opening files.
+    let g:autolinker#edit_file = ['edit', 'fnameescape']   "{{{2
+endif
+
+
+if !exists('g:autolinker#edit_dir')
+    " Command for opening directories
+    let g:autolinker#edit_dir = ['Explore']  "{{{2
 endif
 
 
@@ -104,7 +119,7 @@ if !exists('g:autolinker#fallback')
     "
     " Possible values are:
     " - gf
-    " - ':'. g:autolinker#edit (if you want to create new files)
+    " - ':'. g:autolinker#edit_file[0] (if you want to create new files)
     let g:autolinker#fallback = ':call autolinker#EditInPath("%s"),gf,gx'   "{{{2
 endif
 
@@ -140,6 +155,20 @@ endif
 if !exists('g:autolinker#cfile_stop_characters')
     " See |/[]|.
     let g:autolinker#cfile_stop_characters = '])},;'   "{{{2
+endif
+
+
+if !exists('g:autolinker#find_ignore_rx')
+    " |autolinker#Find()| ignores substitutions from 
+    " |g:autolinker#cfile_gsub| that match this |regexp|.
+    let g:autolinker#find_ignore_rx = ''   "{{{2
+endif
+
+
+if !exists('g:autolinker#find_ignore_subst')
+    " |autolinker#Find()| ignores substitutions from 
+    " |g:autolinker#cfile_gsub| that match this |regexp|.
+    let g:autolinker#find_ignore_subst = '^\a\{2,}:'   "{{{2
 endif
 
 
@@ -291,7 +320,7 @@ endf
 
 
 function! s:prototype.Edit(filename) abort dict "{{{3
-    " TLogVAR a:filename
+    TLibTrace 'autolinker', a:filename
     try
         if !self.Jump_system('n', a:filename, a:filename)
             let filename = a:filename
@@ -330,7 +359,7 @@ function! s:prototype.CleanCFile(text) abort dict "{{{3
     endif
     for [rx, sub; rest] in self.cfile_gsub
         let opts = get(rest, 0, {})
-        let text1 = substitute(text, '\m'. rx, sub, get(opts, 'flags', 'g'))
+        let text1 = substitute(text, '\m\C'. rx, sub, get(opts, 'flags', 'g'))
         if get(opts, 'stop', 0) && text != text1
             break
         endif
@@ -351,11 +380,12 @@ endf
 
 
 function! s:prototype.Jump_internal(mode, cword, cfile) abort dict "{{{3
+    TLibTrace 'autolinker', a:mode, a:cword, a:cfile
     if self.IsInternalLink(a:cfile)
-        let [edit, special] = s:GetEditCmd()
+        let [editdef, special] = s:GetEditCmd('file')
         " TLogVAR edit, special
         if special
-            exec edit fnameescape(expand('%:p'))
+            call s:EditEdit(expand('%:p'), editdef)
         endif
         return self.JumpInternalLink(a:cfile)
     else
@@ -365,13 +395,25 @@ endf
 
 
 function! s:prototype.Jump_system(mode, cword, cfile) abort dict "{{{3
-    " TLogVAR a:mode, a:cword, a:cfile
+    TLibTrace 'autolinker', a:mode, a:cword, a:cfile
     return tlib#sys#Open(a:cfile)
 endf
 
 
+function! s:prototype.Jump_fileurl(mode, cword, cfile) abort dict "{{{3
+    TLibTrace 'autolinker', a:mode, a:cword, a:cfile
+    if a:cfile =~ '^file://'
+        let cfile = tlib#url#Decode(substitute(a:cfile, '^file://', '', ''))
+        let cfile = self.CleanCFile(cfile)
+        TLibTrace 'autolinker', a:cfile, cfile
+        return self.Edit(cfile)
+    endif
+    return 0
+endf
+
+
 function! s:prototype.Jump_def(mode, cword, cfile) abort dict "{{{3
-    " TLogVAR a:mode, a:cword, a:cfile
+    TLibTrace 'autolinker', a:mode, a:cword, a:cfile
     let exact = []
     let partly = []
     for [rname, def] in items(self.defs)
@@ -409,7 +451,7 @@ endf
 
 
 function! s:prototype.Jump_path(mode, cword, cfile) abort dict "{{{3
-    " TLogVAR a:mode, a:cword, a:cfile
+    TLibTrace 'autolinker', a:mode, a:cword, a:cfile
     let matches = s:Globpath(&path, a:cfile .'*')
     let brx = '\C\V\%(\^\|\[\/]\)'. substitute(a:cfile, '[\/]', '\\[\\/]', 'g') .'.\[^.]\+\$'
     let bmatches = filter(copy(matches), 'v:val =~ brx')
@@ -432,7 +474,7 @@ endf
 
 
 function! s:prototype.Jump_tag(mode, cword, cfile) abort dict "{{{3
-    " TLogVAR a:mode, a:cword, a:cfile
+    TLibTrace 'autolinker', a:mode, a:cword, a:cfile
     try
         exec 'tab' g:autolinker#tag a:cword
         return 1
@@ -444,7 +486,7 @@ endf
 
 
 function! s:prototype.Jump_fallback(mode, cword, cfile) abort dict "{{{3
-    " TLogVAR a:mode, a:cword, a:cfile
+    TLibTrace 'autolinker', a:mode, a:cword, a:cfile
     try
         let fallback = self.fallback
         if stridx(fallback, ',') != -1
@@ -540,30 +582,40 @@ function! autolinker#Jump(mode) abort "{{{3
         throw 'AutoLinker: Unsupported mode: '. a:mode
     endif
     " TLogVAR a:mode, cword, cfile
-    call s:Jump(a:mode, cword, cfile)
+    call s:Jump(a:mode, cword, cfile, 0)
 endf
 
 
-function! s:Jump(mode, cword, cfile) abort "{{{3
+let s:blacklist_recursive = ['fallback', 'fileurl', 'internal']
+
+
+function! s:Jump(mode, cword, cfile, recursive) abort "{{{3
     let args = [a:mode, a:cword, a:cfile]
+    TLibTrace 'autolinker', args, a:recursive, b:autolinker.types
     for type in b:autolinker.types
-        let method = 'Jump_'. type
-        " TLogVAR method, args
-        if has_key(b:autolinker, method) && call(b:autolinker[method], args, b:autolinker)
-            return
+        if !a:recursive || index(s:blacklist_recursive, type) == -1
+            let method = 'Jump_'. type
+            TLibTrace 'autolinker', method
+            if has_key(b:autolinker, method) && call(b:autolinker[method], args, b:autolinker)
+                TLibTrace 'autolinker', 'ok'
+                return 1
+            endif
         endif
     endfor
-    echom 'Autolinker: I can''t dance --' a:cfile
-    let wvars = filter(w:, 'v:val =~ "^autolinker_"')
-    if !empty(wvars)
-        exec 'unlet!' join(keys(map(wvars, '"w:". v:val')))
+    if !a:recursive
+        echom 'Autolinker: I can''t dance --' a:cfile
+        let wvars = filter(w:, 'v:val =~ "^autolinker_"')
+        if !empty(wvars)
+            exec 'unlet!' join(keys(map(wvars, '"w:". v:val')))
+        endif
     endif
+    return 0
 endf
 
 
 function! autolinker#Edit(cfile) abort "{{{3
     call autolinker#Ensure()
-    call s:Jump('n', a:cfile, a:cfile)
+    call s:Jump('n', a:cfile, a:cfile, 0)
 endf
 
 
@@ -578,43 +630,66 @@ function! autolinker#EditInPath(cfile) abort "{{{3
 endf
 
 
-function! s:GetEditCmd() abort "{{{3
+function! s:GetEditCmd(what) abort "{{{3
+    let cmd = g:autolinker#edit_{a:what}
     let cnt = ''
     if exists('w:autolinker_t')
-        let edit = g:autolinker#edit.t
+        let editdef = g:autolinker#layout.t
         let cnt = w:autolinker_t
         let special = 1
     elseif exists('w:autolinker_w')
-        let edit = g:autolinker#edit.w
+        let editdef = g:autolinker#layout.w
         let cnt = w:autolinker_w
         let special = 1
     elseif exists('w:autolinker_v')
-        let edit = g:autolinker#edit.v
+        let editdef = g:autolinker#layout.v
         let cnt = w:autolinker_v
         let special = 1
     elseif exists('w:autolinker_s')
-        let edit = g:autolinker#edit.s
+        let editdef = g:autolinker#layout.s
         let cnt = w:autolinker_s
         let special = 1
     else
-        let edit = g:autolinker#edit['*']
+        let editdef = g:autolinker#layout['*']
         let special = 0
     endif
     if cnt == 0
         let cnt = ''
     endif
-    let edit = substitute(edit, '<count>', cnt, 'g')
-    return [edit, special]
+    let editdef[0] = substitute(editdef[0], '<count>', cnt, 'g')
+    if !special
+        if a:what ==# 'dir'
+            let editdef = cmd
+        elseif a:what ==# 'file'
+        endif
+    else
+        let editdef[0] .= '|'. cmd[0]
+        let editdef[1] = get(cmd, 1, '')
+    endif
+    return [editdef, special]
 endf
 
 
 function! s:Edit(filename) abort "{{{3
+    TLibTrace 'autolinker', a:filename
     if !empty(a:filename)
-        let [edit, special] = s:GetEditCmd()
-        exec edit fnameescape(a:filename)
+        let what = isdirectory(a:filename) ? 'dir' : 'file'
+        let [editdef, special] = s:GetEditCmd(what)
+        TLibTrace 'autolinker', what, editdef, special
+        call s:EditEdit(a:filename, editdef)
         return 1
     endif
     return 0
+endf
+
+
+function! s:EditEdit(filename, editdef) abort "{{{3
+    let filename = a:filename
+    let fescape = get(a:editdef, 1, '')
+    if !empty(fescape)
+        let filename = call(fescape, [filename])
+    endif
+    exec a:editdef[0] filename
 endf
 
 
