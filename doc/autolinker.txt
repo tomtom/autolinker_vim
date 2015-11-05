@@ -52,6 +52,7 @@ Contents~
         g:autolinker_exclude_filetypes_rx ..... |g:autolinker_exclude_filetypes_rx|
         :Albuffer ............................. |:Albuffer|
         :Aledit ............................... |:Aledit|
+        :Alfind ............................... |:Alfind|
         prototype.CleanCFile
         prototype.IsInternalLink
         autolinker#ft_viki#GetInstance ........ |autolinker#ft_viki#GetInstance()|
@@ -78,12 +79,16 @@ Contents~
         g:autolinker#map_forward .............. |g:autolinker#map_forward|
         g:autolinker#map_backward ............. |g:autolinker#map_backward|
         g:autolinker#map_options .............. |g:autolinker#map_options|
-        g:autolinker#edit ..................... |g:autolinker#edit|
+        g:autolinker#layout ................... |g:autolinker#layout|
+        g:autolinker#edit_file ................ |g:autolinker#edit_file|
+        g:autolinker#edit_dir ................. |g:autolinker#edit_dir|
         g:autolinker#tag ...................... |g:autolinker#tag|
         g:autolinker#fallback ................. |g:autolinker#fallback|
         g:autolinker#index .................... |g:autolinker#index|
         g:autolinker#cfile_gsub ............... |g:autolinker#cfile_gsub|
         g:autolinker#cfile_stop_characters .... |g:autolinker#cfile_stop_characters|
+        g:autolinker#find_ignore_rx ........... |g:autolinker#find_ignore_rx|
+        g:autolinker#find_ignore_subst ........ |g:autolinker#find_ignore_subst|
         prototype.WordLinks
         prototype.Dirname
         prototype.Rootname
@@ -99,6 +104,7 @@ Contents~
         prototype.JumpInternalLink
         prototype.Jump_internal
         prototype.Jump_system
+        prototype.Jump_fileurl
         prototype.Jump_def
         prototype.Jump_path
         prototype.Jump_tag
@@ -110,6 +116,7 @@ Contents~
         autolinker#Edit ....................... |autolinker#Edit()|
         autolinker#EditInPath ................. |autolinker#EditInPath()|
         autolinker#NextLink ................... |autolinker#NextLink()|
+        autolinker#FileSources ................ |autolinker#FileSources()|
 
 
 ========================================================================
@@ -133,6 +140,12 @@ g:autolinker_exclude_filetypes_rx (default: '')
                                                     *:Aledit*
 :Aledit
     Edit/create a file in path.
+
+                                                    *:Alfind*
+:Alfind
+    Grep all files with prefixes defined in |g:autolinker#cfile_gsub|.
+    This requires the trag_vim plugin to be installed.
+    See also |:Tragsearch|.
 
 
 ========================================================================
@@ -197,9 +210,12 @@ g:autolinker#use_highlight     (default: ['word', 'url', 'cfile_gsub'])
 g:autolinker#url_rx            (default: '\l\{2,6}://[-./[:alnum:]_~%#?&]\+')
 
                                                     *g:autolinker#types*
-g:autolinker#types             (default: ['internal', 'system', 'path', 'def', 'tag', 'fallback'])
+g:autolinker#types             (default: ['internal', 'fileurl', 'system', 'path', 'def', 'tag', 'fallback'])
     Possible values (the order is significant):
     - internal (a document-internal reference)
+    - fileurl (an encoded URL starting with "file://"; the URL will be 
+      decoded and feed to |autolinker#Jump()| as usual; this allows 
+      circumventing encoding issues)
     - system (URLs, non-text files etc. matching 
       |g:autolinker#system_rx|)
     - def (files in the current directory)
@@ -235,9 +251,17 @@ g:autolinker#map_options       (default: '<LocalLeader>a%s')
       \asgz .... Open the destination in a split buffer
       2\awgz ... Open the destination in the second window
 
-                                                    *g:autolinker#edit*
-g:autolinker#edit              (default: {'*': 'tab drop', 'w': '<count>wincmd w | edit', 't': '<count>tabn | edit', 's': '<count>split', 'v': 'vert <count>split'})
-    Command for editing files.
+                                                    *g:autolinker#layout*
+g:autolinker#layout            (default: {'*': ['tab drop', 'fnameescape'], 'w': ['<count>wincmd w'], 't': ['<count>tabn'], 's': ['<count>split'], 'v': ['vert <count>split']})
+    Command for working with layouts.
+
+                                                    *g:autolinker#edit_file*
+g:autolinker#edit_file         (default: ['edit', 'fnameescape'])
+    Command for opening files.
+
+                                                    *g:autolinker#edit_dir*
+g:autolinker#edit_dir          (default: ['Explore'])
+    Command for opening directories
 
                                                     *g:autolinker#tag*
 g:autolinker#tag               (default: 'tselect')
@@ -254,7 +278,7 @@ g:autolinker#fallback          (default: ':call autolinker#EditInPath("%s"),gf,g
 
     Possible values are:
     - gf
-    - ':'. g:autolinker#edit (if you want to create new files)
+    - ':'. g:autolinker#edit_file[0] (if you want to create new files)
 
                                                     *g:autolinker#index*
 g:autolinker#index             (default: '"index.". expand("%:e")')
@@ -283,6 +307,16 @@ g:autolinker#cfile_gsub        (default: [])
                                                     *g:autolinker#cfile_stop_characters*
 g:autolinker#cfile_stop_characters (default: '])},;')
     See |/[]|.
+
+                                                    *g:autolinker#find_ignore_rx*
+g:autolinker#find_ignore_rx    (default: '')
+    |autolinker#Find()| ignores substitutions from 
+    |g:autolinker#cfile_gsub| that match this |regexp|.
+
+                                                    *g:autolinker#find_ignore_subst*
+g:autolinker#find_ignore_subst (default: '^\a\{2,}:')
+    |autolinker#Find()| ignores substitutions from 
+    |g:autolinker#cfile_gsub| that match this |regexp|.
 
 prototype.WordLinks
 
@@ -313,6 +347,8 @@ prototype.JumpInternalLink
 prototype.Jump_internal
 
 prototype.Jump_system
+
+prototype.Jump_fileurl
 
 prototype.Jump_def
 
@@ -350,6 +386,9 @@ autolinker#EditInPath(cfile)
 
                                                     *autolinker#NextLink()*
 autolinker#NextLink(n)
+
+                                                    *autolinker#FileSources()*
+autolinker#FileSources(opts)
 
 
 
