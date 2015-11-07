@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-11-05
-" @Revision:    755
+" @Last Change: 2015-11-07
+" @Revision:    756
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -320,7 +320,7 @@ endf
 
 
 function! s:prototype.Edit(filename) abort dict "{{{3
-    TLibTrace 'autolinker', a:filename
+    Tlibtrace 'autolinker', a:filename
     try
         if !self.Jump_system('n', a:filename, a:filename)
             let filename = a:filename
@@ -380,7 +380,7 @@ endf
 
 
 function! s:prototype.Jump_internal(mode, cword, cfile) abort dict "{{{3
-    TLibTrace 'autolinker', a:mode, a:cword, a:cfile
+    Tlibtrace 'autolinker', a:mode, a:cword, a:cfile
     if self.IsInternalLink(a:cfile)
         let [editdef, special] = s:GetEditCmd('file')
         " TLogVAR edit, special
@@ -395,17 +395,17 @@ endf
 
 
 function! s:prototype.Jump_system(mode, cword, cfile) abort dict "{{{3
-    TLibTrace 'autolinker', a:mode, a:cword, a:cfile
+    Tlibtrace 'autolinker', a:mode, a:cword, a:cfile
     return tlib#sys#Open(a:cfile)
 endf
 
 
 function! s:prototype.Jump_fileurl(mode, cword, cfile) abort dict "{{{3
-    TLibTrace 'autolinker', a:mode, a:cword, a:cfile
+    Tlibtrace 'autolinker', a:mode, a:cword, a:cfile
     if a:cfile =~ '^file://'
         let cfile = tlib#url#Decode(substitute(a:cfile, '^file://', '', ''))
         let cfile = self.CleanCFile(cfile)
-        TLibTrace 'autolinker', a:cfile, cfile
+        Tlibtrace 'autolinker', a:cfile, cfile
         return self.Edit(cfile)
     endif
     return 0
@@ -413,7 +413,7 @@ endf
 
 
 function! s:prototype.Jump_def(mode, cword, cfile) abort dict "{{{3
-    TLibTrace 'autolinker', a:mode, a:cword, a:cfile
+    Tlibtrace 'autolinker', a:mode, a:cword, a:cfile
     let exact = []
     let partly = []
     for [rname, def] in items(self.defs)
@@ -451,7 +451,7 @@ endf
 
 
 function! s:prototype.Jump_path(mode, cword, cfile) abort dict "{{{3
-    TLibTrace 'autolinker', a:mode, a:cword, a:cfile
+    Tlibtrace 'autolinker', a:mode, a:cword, a:cfile
     let matches = s:Globpath(&path, a:cfile .'*')
     let brx = '\C\V\%(\^\|\[\/]\)'. substitute(a:cfile, '[\/]', '\\[\\/]', 'g') .'.\[^.]\+\$'
     let bmatches = filter(copy(matches), 'v:val =~ brx')
@@ -474,7 +474,7 @@ endf
 
 
 function! s:prototype.Jump_tag(mode, cword, cfile) abort dict "{{{3
-    TLibTrace 'autolinker', a:mode, a:cword, a:cfile
+    Tlibtrace 'autolinker', a:mode, a:cword, a:cfile
     try
         exec 'tab' g:autolinker#tag a:cword
         return 1
@@ -486,7 +486,7 @@ endf
 
 
 function! s:prototype.Jump_fallback(mode, cword, cfile) abort dict "{{{3
-    TLibTrace 'autolinker', a:mode, a:cword, a:cfile
+    Tlibtrace 'autolinker', a:mode, a:cword, a:cfile
     try
         let fallback = self.fallback
         if stridx(fallback, ',') != -1
@@ -591,13 +591,13 @@ let s:blacklist_recursive = ['fallback', 'fileurl', 'internal']
 
 function! s:Jump(mode, cword, cfile, recursive) abort "{{{3
     let args = [a:mode, a:cword, a:cfile]
-    TLibTrace 'autolinker', args, a:recursive, b:autolinker.types
+    Tlibtrace 'autolinker', args, a:recursive, b:autolinker.types
     for type in b:autolinker.types
         if !a:recursive || index(s:blacklist_recursive, type) == -1
             let method = 'Jump_'. type
-            TLibTrace 'autolinker', method
+            Tlibtrace 'autolinker', method
             if has_key(b:autolinker, method) && call(b:autolinker[method], args, b:autolinker)
-                TLibTrace 'autolinker', 'ok'
+                Tlibtrace 'autolinker', 'ok'
                 return 1
             endif
         endif
@@ -671,11 +671,11 @@ endf
 
 
 function! s:Edit(filename) abort "{{{3
-    TLibTrace 'autolinker', a:filename
+    Tlibtrace 'autolinker', a:filename
     if !empty(a:filename)
         let what = isdirectory(a:filename) ? 'dir' : 'file'
         let [editdef, special] = s:GetEditCmd(what)
-        TLibTrace 'autolinker', what, editdef, special
+        Tlibtrace 'autolinker', what, editdef, special
         call s:EditEdit(a:filename, editdef)
         return 1
     endif
@@ -732,7 +732,7 @@ function! autolinker#FileSources(opts) abort "{{{3
             call add(globs, tlib#file#Join([subst, pattern]))
         endif
     endfor
-    TLibTrace 'autolinker', globs
+    Tlibtrace 'autolinker', globs
     " TLogVAR globs
     return globs
 endf
