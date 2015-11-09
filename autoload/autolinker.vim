@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-11-07
-" @Revision:    756
+" @Last Change: 2015-11-09
+" @Revision:    760
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -152,9 +152,9 @@ if !exists('g:autolinker#cfile_gsub')
 endif
 
 
-if !exists('g:autolinker#cfile_stop_characters')
-    " See |/[]|.
-    let g:autolinker#cfile_stop_characters = '])},;'   "{{{2
+if !exists('g:autolinker#cfile_rstrip_rx')
+    " Strip a suffix matching this |regexp| from cfile.
+    let g:autolinker#cfile_rstrip_rx = '[])},;:.]\s*'   "{{{2
 endif
 
 
@@ -176,7 +176,7 @@ let s:prototype = {'fallback': g:autolinker#fallback
             \ , 'types': g:autolinker#types
             \ , 'use_highlight': g:autolinker#use_highlight
             \ , 'cfile_gsub': g:autolinker#cfile_gsub
-            \ , 'cfile_stop_characters': g:autolinker#cfile_stop_characters
+            \ , 'cfile_rstrip_rx': g:autolinker#cfile_rstrip_rx
             \ }
 
 
@@ -351,8 +351,8 @@ endf
 
 function! s:prototype.CleanCFile(text) abort dict "{{{3
     let text = a:text
-    if !empty(self.cfile_stop_characters)
-        let text = substitute(text, '['. self.cfile_stop_characters .'].*$', '', '')
+    if !empty(self.cfile_rstrip_rx)
+        let text = substitute(text, self.cfile_rstrip_rx .'$', '', '')
     endif
     if !empty(&includeexpr)
         let text = eval(substitute(&includeexpr, 'v:fname', string(a:text), 'g'))
