@@ -1,8 +1,8 @@
 " @Author:      Thomas Link (micathom AT gmail.com)
 " @GIT:         http://github.com/tomtom/autolinker_vim/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-11-05.
-" @Revision:    77
+" @Last Change: 2015-11-12.
+" @Revision:    79
 " GetLatestVimScripts: 5253 0 :AutoInstall: autolinker.vim
 " Automatic hyperlinks for any filetype
 
@@ -64,7 +64,7 @@ command! -bar Albuffer call autolinker#EnableBuffer()
 
 
 " Edit/create a file in path.
-command! -bar -nargs=1 -complete=file_in_path Aledit call autolinker#Edit(<q-args>)
+command! -bar -nargs=1 -complete=customlist,autolinker#CompleteFilename Aledit call autolinker#Edit(<q-args>)
 
 
 " Grep all files with prefixes defined in |g:autolinker#cfile_gsub|.

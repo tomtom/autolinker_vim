@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-11-10
-" @Revision:    763
+" @Last Change: 2015-11-12
+" @Revision:    779
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -349,20 +349,23 @@ function! s:prototype.CleanCWord(text) abort dict "{{{3
 endf
 
 
-function! s:prototype.CleanCFile(text) abort dict "{{{3
+function! s:prototype.CleanCFile(text, ...) abort dict "{{{3
+    let strip = a:0 >= 1 ? a:1 : 1
     let text = a:text
-    if !empty(self.cfile_rstrip_rx)
+    if strip && !empty(self.cfile_rstrip_rx)
         let text = substitute(text, self.cfile_rstrip_rx .'$', '', '')
     endif
     if !empty(&includeexpr)
         let text = eval(substitute(&includeexpr, 'v:fname', string(a:text), 'g'))
     endif
+    " TLogVAR text
     for [rx, sub; rest] in self.cfile_gsub
         let opts = get(rest, 0, {})
         let text1 = substitute(text, '\m\C'. rx, sub, get(opts, 'flags', 'g'))
         if get(opts, 'stop', 0) && text != text1
             break
         endif
+        " TLogVAR rx, sub, text1
         let text = text1
     endfor
     return text
@@ -516,6 +519,7 @@ function! autolinker#Ensure() abort "{{{3
     if !exists('b:autolinker')
         call autolinker#EnableBuffer()
     endif
+    return b:autolinker
 endf
 
 
@@ -566,14 +570,14 @@ endf
 " 4. Jump to a tag
 " As last resort use |g:autolinker#fallback|
 function! autolinker#Jump(mode) abort "{{{3
-    call autolinker#Ensure()
+    let autolinker = autolinker#Ensure()
     if stridx('in', a:mode) != -1
         let cfile = expand("<cfile>")
         " TLogVAR 1, cfile
-        let cfile = b:autolinker.CleanCFile(cfile)
+        let cfile = autolinker.CleanCFile(cfile)
         " TLogVAR 2, cfile
         let cword = expand("<cword>")
-        let cword = b:autolinker.CleanCWord(cword)
+        let cword = autolinker.CleanCWord(cword)
         " TLogVAR cword
     elseif a:mode ==# 'v'
         let cfile = @"
@@ -582,21 +586,21 @@ function! autolinker#Jump(mode) abort "{{{3
         throw 'AutoLinker: Unsupported mode: '. a:mode
     endif
     " TLogVAR a:mode, cword, cfile
-    call s:Jump(a:mode, cword, cfile, 0)
+    call s:Jump(autolinker, a:mode, cword, cfile, 0)
 endf
 
 
 let s:blacklist_recursive = ['fallback', 'fileurl', 'internal']
 
 
-function! s:Jump(mode, cword, cfile, recursive) abort "{{{3
+function! s:Jump(autolinker, mode, cword, cfile, recursive) abort "{{{3
     let args = [a:mode, a:cword, a:cfile]
-    Tlibtrace 'autolinker', args, a:recursive, b:autolinker.types
-    for type in b:autolinker.types
+    Tlibtrace 'autolinker', args, a:recursive, a:autolinker.types
+    for type in a:autolinker.types
         if !a:recursive || index(s:blacklist_recursive, type) == -1
             let method = 'Jump_'. type
             Tlibtrace 'autolinker', method
-            if has_key(b:autolinker, method) && call(b:autolinker[method], args, b:autolinker)
+            if has_key(a:autolinker, method) && call(a:autolinker[method], args, a:autolinker)
                 Tlibtrace 'autolinker', 'ok'
                 return 1
             endif
@@ -614,8 +618,8 @@ endf
 
 
 function! autolinker#Edit(cfile) abort "{{{3
-    call autolinker#Ensure()
-    call s:Jump('n', a:cfile, a:cfile, 0)
+    let autolinker = autolinker#Ensure()
+    call s:Jump(autolinker, 'n', a:cfile, a:cfile, 0)
 endf
 
 
@@ -736,5 +740,16 @@ function! autolinker#FileSources(opts) abort "{{{3
     Tlibtrace 'autolinker', globs
     " TLogVAR globs
     return globs
+endf
+
+
+function! autolinker#CompleteFilename(ArgLead, CmdLine, CursorPos) abort "{{{3
+    let prototype = deepcopy(s:prototype)
+    " TLogVAR a:ArgLead
+    let filename = prototype.CleanCFile(a:ArgLead .'*', 0)
+    " TLogVAR filename
+    let filenames = tlib#file#Globpath(&path, filename)
+    " TLogVAR len(filenames)
+    return sort(filenames)
 endf
 
