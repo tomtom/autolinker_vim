@@ -86,7 +86,7 @@ Contents~
         g:autolinker#fallback ................. |g:autolinker#fallback|
         g:autolinker#index .................... |g:autolinker#index|
         g:autolinker#cfile_gsub ............... |g:autolinker#cfile_gsub|
-        g:autolinker#cfile_stop_characters .... |g:autolinker#cfile_stop_characters|
+        g:autolinker#cfile_rstrip_rx .......... |g:autolinker#cfile_rstrip_rx|
         g:autolinker#find_ignore_rx ........... |g:autolinker#find_ignore_rx|
         g:autolinker#find_ignore_subst ........ |g:autolinker#find_ignore_subst|
         prototype.WordLinks
@@ -117,6 +117,7 @@ Contents~
         autolinker#EditInPath ................. |autolinker#EditInPath()|
         autolinker#NextLink ................... |autolinker#NextLink()|
         autolinker#FileSources ................ |autolinker#FileSources()|
+        autolinker#CompleteFilename ........... |autolinker#CompleteFilename()|
 
 
 ========================================================================
@@ -304,9 +305,9 @@ g:autolinker#cfile_gsub        (default: [])
     ["^todo://", "~/data/simpletask/"] ... Use todo pseudo-protocol as 
                                            used by the simpletasks app
 
-                                                    *g:autolinker#cfile_stop_characters*
-g:autolinker#cfile_stop_characters (default: '])},;')
-    See |/[]|.
+                                                    *g:autolinker#cfile_rstrip_rx*
+g:autolinker#cfile_rstrip_rx   (default: '[])},;:.]\s*')
+    Strip a suffix matching this |regexp| from cfile.
 
                                                     *g:autolinker#find_ignore_rx*
 g:autolinker#find_ignore_rx    (default: '')
@@ -389,6 +390,9 @@ autolinker#NextLink(n)
 
                                                     *autolinker#FileSources()*
 autolinker#FileSources(opts)
+
+                                                    *autolinker#CompleteFilename()*
+autolinker#CompleteFilename(ArgLead, CmdLine, CursorPos)
 
 
 
