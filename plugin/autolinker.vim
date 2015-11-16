@@ -1,8 +1,8 @@
 " @Author:      Thomas Link (micathom AT gmail.com)
 " @GIT:         http://github.com/tomtom/autolinker_vim/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-11-12.
-" @Revision:    79
+" @Last Change: 2015-11-16.
+" @Revision:    87
 " GetLatestVimScripts: 5253 0 :AutoInstall: autolinker.vim
 " Automatic hyperlinks for any filetype
 
@@ -70,7 +70,11 @@ command! -bar -nargs=1 -complete=customlist,autolinker#CompleteFilename Aledit c
 " Grep all files with prefixes defined in |g:autolinker#cfile_gsub|.
 " This requires the trag_vim plugin to be installed.
 " See also |:Tragsearch|.
-command! -bar -bang -nargs=+ -complete=customlist,trag#CComplete Alfind if exists(':Trag') == 2 | Trag<bang> --filenames --file_sources=*autolinker#FileSources <args> | else | echom ':Alfind requires the trag_vim plugin to be installed!' | endif
+command! -bar -bang -nargs=+ Algrep if exists(':Trag') == 2 | Trag<bang> --filenames --file_sources=*autolinker#FileSources <args> | else | echom ':Algrep requires the trag_vim plugin to be installed!' | endif
+
+
+" Find a file via |:Tragfiles|.
+command! -bar -bang -nargs=* -complete=customlist,trag#CComplete Alfind if exists(':Tragfiles') == 2 | Tragfiles<bang> --filenames --file_sources=*autolinker#FileSources <args> | else | echom ':Alfind requires the trag_vim plugin to be installed!' | endif
 
 
 let &cpo = s:save_cpo

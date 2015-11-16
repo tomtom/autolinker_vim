@@ -52,6 +52,7 @@ Contents~
         g:autolinker_exclude_filetypes_rx ..... |g:autolinker_exclude_filetypes_rx|
         :Albuffer ............................. |:Albuffer|
         :Aledit ............................... |:Aledit|
+        :Algrep ............................... |:Algrep|
         :Alfind ............................... |:Alfind|
         prototype.CleanCFile
         prototype.IsInternalLink
@@ -142,11 +143,15 @@ g:autolinker_exclude_filetypes_rx (default: '')
 :Aledit
     Edit/create a file in path.
 
-                                                    *:Alfind*
-:Alfind
+                                                    *:Algrep*
+:Algrep
     Grep all files with prefixes defined in |g:autolinker#cfile_gsub|.
     This requires the trag_vim plugin to be installed.
     See also |:Tragsearch|.
+
+                                                    *:Alfind*
+:Alfind
+    Find a file via |:Tragfiles|.
 
 
 ========================================================================
