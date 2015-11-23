@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-11-12
-" @Revision:    779
+" @Last Change: 2015-11-23
+" @Revision:    796
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -32,16 +32,13 @@ endif
 if !exists('g:autolinker#types')
     " Possible values (the order is significant):
     " - internal (a document-internal reference)
-    " - fileurl (an encoded URL starting with "file://"; the URL will be 
-    "   decoded and feed to |autolinker#Jump()| as usual; this allows 
-    "   circumventing encoding issues)
     " - system (URLs, non-text files etc. matching 
     "   |g:autolinker#system_rx|)
     " - def (files in the current directory)
     " - path (files in 'path')
     " - tag (tags)
     " - fallback (see |g:autolinker#fallback|)
-    let g:autolinker#types = ['internal', 'fileurl', 'system', 'path', 'def', 'tag', 'fallback']   "{{{2
+    let g:autolinker#types = ['internal', 'system', 'path', 'def', 'tag', 'fallback']   "{{{2
 endif
 
 
@@ -359,6 +356,9 @@ function! s:prototype.CleanCFile(text, ...) abort dict "{{{3
         let text = eval(substitute(&includeexpr, 'v:fname', string(a:text), 'g'))
     endif
     " TLogVAR text
+    if text =~ '^file://'
+        let text = tlib#url#Decode(substitute(text, '^file://', '', ''))
+    endif
     for [rx, sub; rest] in self.cfile_gsub
         let opts = get(rest, 0, {})
         let text1 = substitute(text, '\m\C'. rx, sub, get(opts, 'flags', 'g'))
