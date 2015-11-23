@@ -550,14 +550,31 @@ function! autolinker#EnableBuffer() abort "{{{3
     for c in ['t', 'w', 'v', 's']
         exec 'nnoremap' printf(g:autolinker#map_options, c) ':<C-U>let w:autolinker_'. c '= v:count<cr>'
     endfor
+    call tlib#balloon#Register('autolinker#Balloon()')
     let b:undo_ftplugin = 'call autolinker#DisableBuffer()'. (exists('b:undo_ftplugin') ? '|'. b:undo_ftplugin : '')
 endf
 
 
 function! autolinker#DisableBuffer() abort "{{{3
+    call tlib#balloon#Remove('autolinker#Balloon()')
     call b:autolinker.ClearHighlight()
     call b:autolinker.UninstallHotkey()
     unlet! b:autolinker
+endf
+
+
+function! autolinker#Balloon() abort "{{{3
+    let autolinker = autolinker#Ensure()
+    let cfile = tlib#balloon#Expand('<cfile>')
+    let cfile = autolinker.CleanCFile(cfile)
+    " TLogVAR cfile, tlib#sys#IsSpecial(cfile), filereadable(cfile)
+    if !tlib#sys#IsSpecial(cfile) && filereadable(cfile)
+        let lines = readfile(cfile)
+        return join(lines[0 : 5], "\n")
+    elseif isdirectory(cfile)
+        let items = tlib#file#Glob(tlib#file#Join([cfile, '*']))
+        return join(items[0 : 5], "\n")
+    endif
 endf
 
 
