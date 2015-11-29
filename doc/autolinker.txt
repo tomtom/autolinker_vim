@@ -9,6 +9,11 @@ Features:
     - Jump to files in the current directory
     - Jump to files in 'path'
     - Jump to tags
+    - Jump to file URLs
+    - Jump to line numbers (syntax: filename#123 where '123' is the line 
+      number)
+    - Jump to the first occurrence of a string (syntax: 
+      filename#q=STRING)
     - Invoke URLs
     - Highlight potential hyperlinks (doesn't work with all filetypes)
     - Use a fallback command (e.g. create inexistent files)
@@ -17,7 +22,7 @@ Features:
       circumvent encoding issues etc.
 
 The default map is `gz` in normal and visual mode (see |g:autolinker#nmap| and 
-|g:autolinker#xmap|). In insert mode, is is <c-cr> if the key is yet unmapped 
+|g:autolinker#xmap|). In insert mode, it is <c-cr> if the key is yet unmapped 
 (see |g:autolinker#imap|).
 
 Differences to |gf|:
@@ -53,7 +58,6 @@ Contents~
         g:autolinker_patterns ................. |g:autolinker_patterns|
         g:autolinker_exclude_filetypes_rx ..... |g:autolinker_exclude_filetypes_rx|
         :Albuffer ............................. |:Albuffer|
-        :Aledit ............................... |:Aledit|
         :Algrep ............................... |:Algrep|
         :Alfind ............................... |:Alfind|
         prototype.CleanCFile
@@ -69,6 +73,10 @@ Contents~
         prototype.Jump_path
         prototype.Jump_tag
         prototype.Jump_fallback
+        autolinker#cfile#New .................. |autolinker#cfile#New()|
+        prototype.CleanCFile
+        prototype.CFile
+        prototype.Pos
         prototype.CleanCFile
         prototype.JumpInternalLink
         prototype.IsInternalLink
@@ -92,6 +100,7 @@ Contents~
         g:autolinker#cfile_rstrip_rx .......... |g:autolinker#cfile_rstrip_rx|
         g:autolinker#find_ignore_rx ........... |g:autolinker#find_ignore_rx|
         g:autolinker#find_ignore_subst ........ |g:autolinker#find_ignore_subst|
+        g:autolinker#fragment_rx .............. |g:autolinker#fragment_rx|
         prototype.WordLinks
         prototype.Dirname
         prototype.Rootname
@@ -101,13 +110,15 @@ Contents~
         prototype.CfileGsubRx
         prototype.Highlight
         prototype.Edit
+        prototype.SplitFilename
+        prototype.GetCFile
+        prototype.GetCWord
         prototype.CleanCWord
         prototype.CleanCFile
         prototype.IsInternalLink
         prototype.JumpInternalLink
         prototype.Jump_internal
         prototype.Jump_system
-        prototype.Jump_fileurl
         prototype.Jump_def
         prototype.Jump_path
         prototype.Jump_tag
@@ -117,7 +128,6 @@ Contents~
         autolinker#DisableBuffer .............. |autolinker#DisableBuffer()|
         autolinker#Balloon .................... |autolinker#Balloon()|
         autolinker#Jump ....................... |autolinker#Jump()|
-        autolinker#Edit ....................... |autolinker#Edit()|
         autolinker#EditInPath ................. |autolinker#EditInPath()|
         autolinker#NextLink ................... |autolinker#NextLink()|
         autolinker#FileSources ................ |autolinker#FileSources()|
@@ -141,10 +151,6 @@ g:autolinker_exclude_filetypes_rx (default: '')
                                                     *:Albuffer*
 :Albuffer
     Enable the autolinker plugin for the current buffer.
-
-                                                    *:Aledit*
-:Aledit
-    Edit/create a file in path.
 
                                                     *:Algrep*
 :Algrep
@@ -190,6 +196,19 @@ prototype.Jump_path
 prototype.Jump_tag
 
 prototype.Jump_fallback
+
+
+========================================================================
+autoload/autolinker/cfile.vim~
+
+                                                    *autolinker#cfile#New()*
+autolinker#cfile#New(filename, autolinker)
+
+prototype.CleanCFile
+
+prototype.CFile
+
+prototype.Pos
 
 
 ========================================================================
@@ -324,6 +343,9 @@ g:autolinker#find_ignore_subst (default: '^\a\{2,}:')
     |autolinker#Find()| ignores substitutions from 
     |g:autolinker#cfile_gsub| that match this |regexp|.
 
+                                                    *g:autolinker#fragment_rx*
+g:autolinker#fragment_rx       (default: '\%(\d\+\|lnum=\d\+\|q=\S\+\)$')
+
 prototype.WordLinks
 
 prototype.Dirname
@@ -342,6 +364,12 @@ prototype.Highlight
 
 prototype.Edit
 
+prototype.SplitFilename
+
+prototype.GetCFile
+
+prototype.GetCWord
+
 prototype.CleanCWord
 
 prototype.CleanCFile
@@ -353,8 +381,6 @@ prototype.JumpInternalLink
 prototype.Jump_internal
 
 prototype.Jump_system
-
-prototype.Jump_fileurl
 
 prototype.Jump_def
 
@@ -386,9 +412,6 @@ autolinker#Jump(mode)
     3. Jump to a file in 'path' mathing the word under cursor
     4. Jump to a tag
     As last resort use |g:autolinker#fallback|
-
-                                                    *autolinker#Edit()*
-autolinker#Edit(cfile)
 
                                                     *autolinker#EditInPath()*
 autolinker#EditInPath(cfile)
