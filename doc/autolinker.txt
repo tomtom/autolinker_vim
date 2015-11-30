@@ -73,10 +73,6 @@ Contents~
         prototype.Jump_path
         prototype.Jump_tag
         prototype.Jump_fallback
-        autolinker#cfile#New .................. |autolinker#cfile#New()|
-        prototype.CleanCFile
-        prototype.CFile
-        prototype.Pos
         prototype.CleanCFile
         prototype.JumpInternalLink
         prototype.IsInternalLink
@@ -138,7 +134,7 @@ Contents~
 plugin/autolinker.vim~
 
                                                     *g:autolinker_filetypes*
-g:autolinker_filetypes         (default: ['text', 'txt', 'todo', 'todotxt', 'md', 'markdown', 'markdown.pandoc', 'tex', 'latex', 'help'])
+g:autolinker_filetypes         (default: ['text', 'txt', 'todo', 'ttodo', 'todotxt', 'md', 'markdown', 'markdown.pandoc', 'tex', 'latex', 'help'])
 
                                                     *g:autolinker_patterns*
 g:autolinker_patterns          (default: ['*.txt', '*.TXT', '*.md', '*.markdown'])
@@ -196,19 +192,6 @@ prototype.Jump_path
 prototype.Jump_tag
 
 prototype.Jump_fallback
-
-
-========================================================================
-autoload/autolinker/cfile.vim~
-
-                                                    *autolinker#cfile#New()*
-autolinker#cfile#New(filename, autolinker)
-
-prototype.CleanCFile
-
-prototype.CFile
-
-prototype.Pos
 
 
 ========================================================================
