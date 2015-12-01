@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-11-29
-" @Revision:    836
+" @Last Change: 2015-12-01
+" @Revision:    842
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -297,26 +297,30 @@ endf
 
 
 function! s:prototype.Highlight() abort dict "{{{3
+    " TLogVAR self.use_highlight
     if !empty(self.use_highlight)
-        if index(self.use_highlight, 'word')
+        if index(self.use_highlight, 'word') != -1
             call self.ClearHighlight()
             let rx = join(map(values(self.defs), 'v:val.rx'), '\|')
+            " TLogVAR rx
             if !empty(rx)
-                exec 'syn match AutoHyperlink /'. escape(rx, '/') .'/'
+                exec 'syn match AutoHyperlinkWord /'. escape(rx, '/') .'/'
             endif
         endif
-        if index(self.use_highlight, 'url')
-            exec 'syn match AutoHyperlink /'. escape(g:autolinker#url_rx, '/') .'/'
+        if index(self.use_highlight, 'url') != -1
+            exec 'syn match AutoHyperlinkURL /'. escape(g:autolinker#url_rx, '/') .'/'
         endif
-        if index(self.use_highlight, 'cfile_gsub')
+        if index(self.use_highlight, 'cfile_gsub') != -1
             let crx = self.CfileGsubRx(1)
             if !empty(crx)
-                exec 'syn match AutoHyperlink /'. crx .'/'
+                exec 'syn match AutoHyperlinkCfile /'. crx .'/'
             endif
         endif
         " let col = &background == 'dark' ? 'Cyan' : 'DarkBlue'
         " exec 'hi AutoHyperlink term=underline cterm=underline gui=underline ctermfg='. col 'guifg='. col
-        hi AutoHyperlink term=underline cterm=underline gui=underline
+        hi AutoHyperlinkWord term=underline cterm=underline gui=underline
+        hi AutoHyperlinkURL term=underline cterm=underline gui=underline
+        hi AutoHyperlinkCfile term=underline cterm=underline gui=underline
     endif
 endf
 
