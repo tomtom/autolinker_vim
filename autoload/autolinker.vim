@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-12-01
-" @Revision:    842
+" @Last Change: 2015-12-04
+" @Revision:    844
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -24,7 +24,7 @@ endif
 
 
 if !exists('g:autolinker#url_rx')
-    let g:autolinker#url_rx = '\l\{2,6}://[-./[:alnum:]_~%#?&]\+'   "{{{2
+    let g:autolinker#url_rx = '\l\{2,6}://[-./[:alnum:]_+~%#?&]\+'   "{{{2
     " let g:autolinker#url_rx = '\<\%(ht\|f\)tps\?:\/\/\f\+'   "{{{2
 endif
 
@@ -448,7 +448,7 @@ endf
 
 function! s:prototype.Jump_internal() abort dict "{{{3
     let cfile = self.GetCFile()
-    Tlibtrace 'autolinker', cfile
+    Tlibtrace 'autolinker', 'internal', cfile
     if self.IsInternalLink(cfile)
         let [editdef, special] = s:GetEditCmd('file')
         " TLogVAR edit, special
@@ -464,7 +464,7 @@ endf
 
 function! s:prototype.Jump_system(...) abort dict "{{{3
     let cfile = a:0 >= 1 ? a:1 : self.GetCFile()
-    Tlibtrace 'autolinker', cfile
+    Tlibtrace 'autolinker', 'system', cfile
     return tlib#sys#Open(cfile)
 endf
 
@@ -483,7 +483,7 @@ endf
 
 function! s:prototype.Jump_def() abort dict "{{{3
     let [cword, postprocess] = self.SplitFilename(self.GetCWord())
-    Tlibtrace 'autolinker', cword
+    Tlibtrace 'autolinker', 'def', cword
     let exact = []
     let partly = []
     for [rname, def] in items(self.defs)
@@ -522,7 +522,7 @@ endf
 
 function! s:prototype.Jump_path() abort dict "{{{3
     let [cfile, postprocess] = self.SplitFilename(self.GetCFile())
-    Tlibtrace 'autolinker', cfile
+    Tlibtrace 'autolinker', 'path', cfile
     let matches = s:Globpath(&path, cfile .'*')
     let brx = '\C\V\%(\^\|\[\/]\)'. substitute(cfile, '[\/]', '\\[\\/]', 'g') .'.\[^.]\+\$'
     let bmatches = filter(copy(matches), 'v:val =~ brx')
@@ -546,7 +546,7 @@ endf
 
 function! s:prototype.Jump_tag() abort dict "{{{3
     let cword = self.GetCWord()
-    Tlibtrace 'autolinker', cword
+    Tlibtrace 'autolinker', 'tag', cword
     try
         exec 'tab' g:autolinker#tag cword
         return 1
@@ -559,7 +559,7 @@ endf
 
 function! s:prototype.Jump_fallback() abort dict "{{{3
     let [cfile, postprocess] = self.SplitFilename(self.GetCFile())
-    Tlibtrace 'autolinker', cfile
+    Tlibtrace 'autolinker', 'fallback', cfile
     try
         let fallback = self.fallback
         if stridx(fallback, ',') != -1
