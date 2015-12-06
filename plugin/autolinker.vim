@@ -1,8 +1,8 @@
 " @Author:      Thomas Link (micathom AT gmail.com)
 " @GIT:         http://github.com/tomtom/autolinker_vim/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-11-30.
-" @Revision:    89
+" @Last Change: 2015-12-04.
+" @Revision:    90
 " GetLatestVimScripts: 5253 0 :AutoInstall: autolinker.vim
 " Automatic hyperlinks for any filetype
 
@@ -16,7 +16,7 @@ set cpo&vim
 
 
 if !exists('g:autolinker_filetypes')
-    let g:autolinker_filetypes = ['text', 'txt', 'todo', 'ttodo', 'todotxt', 'md', 'markdown', 'markdown.pandoc', 'tex', 'latex', 'help']   "{{{2
+    let g:autolinker_filetypes = ['text', 'txt', 'todo', 'ttodo', 'todotxt', 'md', 'markdown', 'markdown.pandoc', 'tex', 'latex']   "{{{2
 endif
 if exists('g:autolinker_filetypes_user')
     let g:autolinker_filetypes += g:autolinker_filetypes_user
