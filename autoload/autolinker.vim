@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-12-04
-" @Revision:    844
+" @Last Change: 2015-12-06
+" @Revision:    845
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -24,7 +24,7 @@ endif
 
 
 if !exists('g:autolinker#url_rx')
-    let g:autolinker#url_rx = '\l\{2,6}://[-./[:alnum:]_+~%#?&]\+'   "{{{2
+    let g:autolinker#url_rx = '\l\{2,6}://[-./[:alnum:]_+~=%#?&]\+'   "{{{2
     " let g:autolinker#url_rx = '\<\%(ht\|f\)tps\?:\/\/\f\+'   "{{{2
 endif
 
