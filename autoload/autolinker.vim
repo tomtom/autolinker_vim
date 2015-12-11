@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-12-06
-" @Revision:    845
+" @Last Change: 2015-12-10
+" @Revision:    860
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -151,7 +151,7 @@ endif
 
 if !exists('g:autolinker#cfile_rstrip_rx')
     " Strip a suffix matching this |regexp| from cfile.
-    let g:autolinker#cfile_rstrip_rx = '[])},;:.]\s*'   "{{{2
+    let g:autolinker#cfile_rstrip_rx = '[\])},;:.]\s*'   "{{{2
 endif
 
 
@@ -282,17 +282,20 @@ function! s:prototype.ClearHighlight() abort dict "{{{3
 endf
 
 
-function! s:prototype.CfileGsubRx(add_f) abort dict "{{{3
+function! s:prototype.CfileGsubRx() abort dict "{{{3
     let crx = []
     for [rx, subst; rest] in self.cfile_gsub
-        let rxs = substitute(rx, '\^', '\\<', 'g')
-        let rxs = '\m'. escape(rxs, '/') .'\f*'
-        if a:add_f
-            let rxs .= '\f*'
-        endif
+        let rxs = substitute(rx, '\^', '', 'g')
+        let rxs = escape(rxs, '/')
         call add(crx, rxs)
     endfor
-    return empty(crx) ? '' : printf('\%%(%s\)', join(crx, '\|'))
+    if empty(crx)
+        let rv = ''
+    else
+        let rv = '\m\<'. printf('\%%(%s\)', join(crx, '\|')) .'\f*'
+    endif
+    Tlibtrace 'autolinker', rv
+    return rv
 endf
 
 
@@ -311,7 +314,7 @@ function! s:prototype.Highlight() abort dict "{{{3
             exec 'syn match AutoHyperlinkURL /'. escape(g:autolinker#url_rx, '/') .'/'
         endif
         if index(self.use_highlight, 'cfile_gsub') != -1
-            let crx = self.CfileGsubRx(1)
+            let crx = self.CfileGsubRx()
             if !empty(crx)
                 exec 'syn match AutoHyperlinkCfile /'. crx .'/'
             endif
@@ -780,7 +783,7 @@ function! s:GetRx() abort "{{{3
         let rxs = []
         let rxs += map(values(b:autolinker.defs), 'v:val.rx')
         let rxs += g:tlib#sys#special_protocols
-        let crx = b:autolinker.CfileGsubRx(0)
+        let crx = b:autolinker.CfileGsubRx()
         if !empty(crx)
             call add(rxs, crx)
         endif
