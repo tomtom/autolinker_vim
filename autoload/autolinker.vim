@@ -1,8 +1,8 @@
-" @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
+" @thor:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-12-10
-" @Revision:    860
+" @Last Change: 2015-12-12
+" @Revision:    864
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -600,9 +600,13 @@ let s:ft_prototypes = {}
 
 function! autolinker#EnableBuffer() abort "{{{3
     let ft = &ft
+    if empty(ft)
+        let ft = '<NONE>'
+    endif
     if !has_key(s:ft_prototypes, ft)
         let prototype = deepcopy(s:prototype)
         for fft in [ft, substitute(ft, '\..\+$', '', ''), '']
+            Tlibtrace 'autolinker', fft, ft
             if empty(fft)
                 let s:ft_prototypes[ft] = prototype
             else
