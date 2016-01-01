@@ -58,6 +58,7 @@ Contents~
         g:autolinker_patterns ................. |g:autolinker_patterns|
         g:autolinker_exclude_filetypes_rx ..... |g:autolinker_exclude_filetypes_rx|
         :Albuffer ............................. |:Albuffer|
+        :Aledit ............................... |:Aledit|
         :Algrep ............................... |:Algrep|
         :Alfind ............................... |:Alfind|
         prototype.CleanCFile
@@ -124,6 +125,7 @@ Contents~
         autolinker#DisableBuffer .............. |autolinker#DisableBuffer()|
         autolinker#Balloon .................... |autolinker#Balloon()|
         autolinker#Jump ....................... |autolinker#Jump()|
+        autolinker#Edit ....................... |autolinker#Edit()|
         autolinker#EditInPath ................. |autolinker#EditInPath()|
         autolinker#NextLink ................... |autolinker#NextLink()|
         autolinker#FileSources ................ |autolinker#FileSources()|
@@ -134,7 +136,7 @@ Contents~
 plugin/autolinker.vim~
 
                                                     *g:autolinker_filetypes*
-g:autolinker_filetypes         (default: ['text', 'txt', 'todo', 'ttodo', 'todotxt', 'md', 'markdown', 'markdown.pandoc', 'tex', 'latex', 'help'])
+g:autolinker_filetypes         (default: ['text', 'txt', 'todo', 'ttodo', 'todotxt', 'md', 'markdown', 'markdown.pandoc', 'tex', 'latex'])
 
                                                     *g:autolinker_patterns*
 g:autolinker_patterns          (default: ['*.txt', '*.TXT', '*.md', '*.markdown'])
@@ -147,6 +149,10 @@ g:autolinker_exclude_filetypes_rx (default: '')
                                                     *:Albuffer*
 :Albuffer
     Enable the autolinker plugin for the current buffer.
+
+                                                    *:Aledit*
+:Aledit
+    " Edit/create a file in path.
 
                                                     *:Algrep*
 :Algrep
@@ -218,7 +224,7 @@ g:autolinker#use_highlight     (default: ['word', 'url', 'cfile_gsub'])
     - cfile_gsub
 
                                                     *g:autolinker#url_rx*
-g:autolinker#url_rx            (default: '\l\{2,6}://[-./[:alnum:]_~%#?&]\+')
+g:autolinker#url_rx            (default: '\l\{2,6}://[-./[:alnum:]_+~=%#?&]\+')
 
                                                     *g:autolinker#types*
 g:autolinker#types             (default: ['internal', 'system', 'path', 'def', 'tag', 'fallback'])
@@ -313,7 +319,7 @@ g:autolinker#cfile_gsub        (default: [])
                                            used by the simpletasks app
 
                                                     *g:autolinker#cfile_rstrip_rx*
-g:autolinker#cfile_rstrip_rx   (default: '[])},;:.]\s*')
+g:autolinker#cfile_rstrip_rx   (default: '[\])},;:.]\s*')
     Strip a suffix matching this |regexp| from cfile.
 
                                                     *g:autolinker#find_ignore_rx*
@@ -395,6 +401,9 @@ autolinker#Jump(mode)
     3. Jump to a file in 'path' mathing the word under cursor
     4. Jump to a tag
     As last resort use |g:autolinker#fallback|
+
+                                                    *autolinker#Edit()*
+autolinker#Edit(cfile)
 
                                                     *autolinker#EditInPath()*
 autolinker#EditInPath(cfile)

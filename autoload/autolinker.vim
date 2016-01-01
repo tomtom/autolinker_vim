@@ -1,8 +1,8 @@
 " @thor:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-12-12
-" @Revision:    864
+" @Last Change: 2016-01-01
+" @Revision:    870
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -174,7 +174,8 @@ if !exists('g:autolinker#fragment_rx')
 endif
 
 
-let s:prototype = {'fallback': g:autolinker#fallback
+let s:prototype = {'mode': 'n'
+            \ , 'fallback': g:autolinker#fallback
             \ , 'types': g:autolinker#types
             \ , 'use_highlight': g:autolinker#use_highlight
             \ , 'cfile_gsub': g:autolinker#cfile_gsub
@@ -378,9 +379,13 @@ endf
 function! s:prototype.GetCFile() abort dict "{{{3
     if !has_key(self, 'cfile')
         if stridx('in', self.mode) != -1
-            let self.cfile = expand("<cfile>")
+            if has_key(self, 'a_cfile')
+                let cfile = self.a_cfile
+            else
+                let cfile = expand("<cfile>")
+            endif
             " TLogVAR 1, self.cfile
-            let self.cfile = self.CleanCFile(self.cfile)
+            let self.cfile = self.CleanCFile(cfile)
             " TLogVAR 2, self.cfile
         elseif self.mode ==# 'v'
             let self.cfile = @"
@@ -696,10 +701,11 @@ function! s:Jump(autolinker, recursive) abort "{{{3
 endf
 
 
-" function! autolinker#Edit(cfile) abort "{{{3
-"     let autolinker = autolinker#Ensure()
-"     call s:Jump(autolinker, 'n', a:cfile, a:cfile, 0)
-" endf
+function! autolinker#Edit(cfile) abort "{{{3
+    let autolinker = copy(autolinker#Ensure())
+    let autolinker.a_cfile = a:cfile
+    call s:Jump(autolinker, 0)
+endf
 
 
 function! autolinker#EditInPath(cfile) abort "{{{3
