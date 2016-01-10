@@ -1,8 +1,8 @@
 " @thor:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2016-01-01
-" @Revision:    870
+" @Last Change: 2016-01-10
+" @Revision:    878
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -834,11 +834,19 @@ endf
 function! autolinker#CompleteFilename(ArgLead, CmdLine, CursorPos) abort "{{{3
     let prototype = deepcopy(s:prototype)
     " TLogVAR a:ArgLead
+    let names = filter(map(copy(g:autolinker#cfile_gsub), 'v:val[0]'), 'v:val =~# ''^\^''')
+    let names = map(names, 'substitute(v:val, ''^\^'', "", "")')
+    Tlibtrace 'autolinker', names
+    if !empty(a:ArgLead)
+        let nchars = len(a:ArgLead)
+        let names = filter(names, 'strpart(v:val, 0, nchars) ==# a:ArgLead')
+        Tlibtrace 'autolinker', a:ArgLead, names
+    endif
     let filename = prototype.CleanCFile(a:ArgLead .'*', 0)
     " TLogVAR filename
     let filenames = tlib#file#Globpath(&path, filename)
     " TLogVAR len(filenames)
-    return sort(filenames)
+    return sort(names + filenames)
 endf
 
 
