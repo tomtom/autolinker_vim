@@ -2,7 +2,7 @@
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Last Change: 2016-01-10
-" @Revision:    878
+" @Revision:    887
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -842,9 +842,18 @@ function! autolinker#CompleteFilename(ArgLead, CmdLine, CursorPos) abort "{{{3
         let names = filter(names, 'strpart(v:val, 0, nchars) ==# a:ArgLead')
         Tlibtrace 'autolinker', a:ArgLead, names
     endif
-    let filename = prototype.CleanCFile(a:ArgLead .'*', 0)
-    " TLogVAR filename
-    let filenames = tlib#file#Globpath(&path, filename)
+    let filenames = []
+    if isdirectory(a:ArgLead)
+        let dir = tlib#file#Join([a:ArgLead, ''])
+        if a:ArgLead !=# dir
+            call add(filenames, dir)
+        endif
+        let pattern = tlib#file#Join([a:ArgLead, '*'])
+    else
+        let pattern = a:ArgLead .'*'
+    endif
+    " TLogVAR pattern
+    call extend(filenames, tlib#file#Globpath(&path, prototype.CleanCFile(pattern, 0)))
     " TLogVAR len(filenames)
     return sort(names + filenames)
 endf
