@@ -855,7 +855,7 @@ function! autolinker#CompleteFilename(ArgLead, CmdLine, CursorPos) abort "{{{3
     " TLogVAR pattern
     call extend(filenames, tlib#file#Globpath(&path, prototype.CleanCFile(pattern, 0)))
     " TLogVAR len(filenames)
-    return sort(names + filenames)
+    return sort(names) + sort(filenames)
 endf
 
 
