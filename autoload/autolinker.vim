@@ -1,8 +1,8 @@
 " @thor:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2016-01-10
-" @Revision:    887
+" @Last Change: 2016-01-12
+" @Revision:    888
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -855,7 +855,9 @@ function! autolinker#CompleteFilename(ArgLead, CmdLine, CursorPos) abort "{{{3
     " TLogVAR pattern
     call extend(filenames, tlib#file#Globpath(&path, prototype.CleanCFile(pattern, 0)))
     " TLogVAR len(filenames)
-    return sort(names) + sort(filenames)
+    let rv = sort(names) + sort(filenames)
+    let rv = map(rv, 'escape(v:val, '' '')')
+    return rv
 endf
 
 
