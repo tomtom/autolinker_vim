@@ -1,8 +1,8 @@
 " @thor:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2016-01-12
-" @Revision:    888
+" @Last Change: 2016-01-25
+" @Revision:    892
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -279,7 +279,7 @@ endf
 
 
 function! s:prototype.ClearHighlight() abort dict "{{{3
-    silent! syn clear AutoHyperlink
+    silent! syntax clear AutoHyperlink
 endf
 
 
@@ -287,6 +287,7 @@ function! s:prototype.CfileGsubRx() abort dict "{{{3
     let crx = []
     for [rx, subst; rest] in self.cfile_gsub
         let rxs = substitute(rx, '\^', '', 'g')
+        " let rxs = substitute(rxs, '[\\/]', '[\\\\/]', 'g')
         let rxs = escape(rxs, '/')
         call add(crx, rxs)
     endfor
@@ -308,16 +309,16 @@ function! s:prototype.Highlight() abort dict "{{{3
             let rx = join(map(values(self.defs), 'v:val.rx'), '\|')
             " TLogVAR rx
             if !empty(rx)
-                exec 'syn match AutoHyperlinkWord /'. escape(rx, '/') .'/'
+                exec 'syntax match AutoHyperlinkWord /'. escape(rx, '/') .'/'
             endif
         endif
         if index(self.use_highlight, 'url') != -1
-            exec 'syn match AutoHyperlinkURL /'. escape(g:autolinker#url_rx, '/') .'/'
+            exec 'syntax match AutoHyperlinkURL /'. escape(g:autolinker#url_rx, '/') .'/'
         endif
         if index(self.use_highlight, 'cfile_gsub') != -1
             let crx = self.CfileGsubRx()
             if !empty(crx)
-                exec 'syn match AutoHyperlinkCfile /'. crx .'/'
+                exec 'syntax match AutoHyperlinkCfile /'. crx .'/'
             endif
         endif
         " let col = &background == 'dark' ? 'Cyan' : 'DarkBlue'
