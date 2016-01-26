@@ -1,0 +1,38 @@
+  - ]gz, [gz maps to jump between potential links (only words and Internet hyperlinks)
+  - Make ]gz, [gz maps configurable
+  - g:autolinker#cfile_gsub: "stop" option
+  - autolinker#EditInPath(): Insert cfile
+  - Moved g:autolinker#system_rx related code to tlib
+  - typo
+  - Require tlib >= 1.15
+  - Support for markdown link maps
+  - Support for sub-filetypes (MAJOR.MINOR)
+  - Support for internal references
+  - Misc enhancements
+  - FIX g:autolinker#cfile_stop_characters
+  - typo
+  - NEW :Alfind command
+  - NEW fileurl support; improved handling of directories etc.
+  - s/TLibTrace/Tlibtrace/g
+  - g:autolinker#cfile_rstrip_rx replaces g:autolinker#cfile_stop_characters
+  - s:EditEdit: Ensure the directory exists
+  - :Aledit completion expands cfile_gsub etc.
+  - Alfind -> Algrep; NEW Alfind: Select file
+  - NEW autolinker#Balloon()
+  - Handle file:// urls in CleanCFile()
+  - Support jumping to line numbers (filename#LNUM) or occurrences of strings (filename#q=RX)
+  - Enable for ttodo filetype by default
+  - Fix highlighting
+  - g:autolinker#url_rx: include "+"
+  - g:autolinker_filetypes: Remove help
+  - g:autolinker#url_rx: Include "="
+  - Simplify prototype.CfileGsubRx()
+  - autolinker#EnableBuffer: FIX handle buffers with empty filetypes
+  - Re-enable :Aledit command
+  - autolinker#CompleteFilename. Include names from g:autolinker#cfile_gsub
+  - autolinker#CompleteFilename: Optimize completion of directories
+  - autolinker#CompleteFilename(): sort cfile_gsub names before results from glob()
+  - autolinker#CompleteFilename: Escape blanks
+  MD5 checksum: fcef3b288da74153a143e2d0272fe30e
+version: "0.02"
+
