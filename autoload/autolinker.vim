@@ -1,8 +1,8 @@
 " @thor:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2016-01-25
-" @Revision:    892
+" @Last Change: 2016-01-28
+" @Revision:    893
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -783,7 +783,10 @@ function! s:EditEdit(filename, editdef) abort "{{{3
         let filename = call(fescape, [filename])
     endif
     call tlib#dir#Ensure(fnamemodify(a:filename, ':p:h'))
-    exec a:editdef[0] filename
+    try
+        exec a:editdef[0] filename
+    catch /^Vim\%((\a\+)\)\=:E325/
+    endtry
 endf
 
 
