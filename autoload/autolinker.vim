@@ -1,8 +1,8 @@
 " @thor:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2016-01-28
-" @Revision:    893
+" @Last Change: 2016-02-10
+" @Revision:    894
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -559,6 +559,7 @@ function! s:prototype.Jump_tag() abort dict "{{{3
     try
         exec 'tab' g:autolinker#tag cword
         return 1
+    catch /^Vim\%((\a\+)\)\=:E73/
     catch /^Vim\%((\a\+)\)\=:E426/
     catch /^Vim\%((\a\+)\)\=:E433/
     endtry
