@@ -2,7 +2,7 @@
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Last Change: 2016-03-22
-" @Revision:    913
+" @Revision:    914
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -643,7 +643,7 @@ function! autolinker#EnableBuffer() abort "{{{3
     endfor
     call tlib#balloon#Register('autolinker#Balloon()')
     " let b:undo_ftplugin = 'call autolinker#DisableBuffer()'. (exists('b:undo_ftplugin') ? '|'. b:undo_ftplugin : '')
-    Tlibtrace 'autolinker', b:undo_ftplugin
+    " Tlibtrace 'autolinker', b:undo_ftplugin
 endf
 
 
