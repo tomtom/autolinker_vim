@@ -1,8 +1,8 @@
 " @Author:      Thomas Link (micathom AT gmail.com)
 " @GIT:         http://github.com/tomtom/autolinker_vim/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2016-01-26.
-" @Revision:    92
+" @Last Change: 2016-03-22.
+" @Revision:    110
 " GetLatestVimScripts: 5253 0 :AutoInstall: autolinker.vim
 " Automatic hyperlinks for any filetype
 
@@ -47,10 +47,10 @@ command! -bar Alcachereset let g:autolinker_glob_cache = {}
 
 
 augroup AutoLinker
-    augroup! AutoLinker
+    autocmd! AutoLinker
     autocmd FocusLost * Alcachereset
     autocmd BufWritePre,FileWritePre * if index(g:autolinker_filetypes, &ft, 0, 0) != -1 && !filereadable(expand("<afile>")) | Alcachereset | endif
-    autocmd BufWinEnter * if index(g:autolinker_filetypes, &ft, 0, 0) != -1 | call autolinker#Ensure() | endif
+    autocmd FileType * if index(g:autolinker_filetypes, &ft, 0, 0) != -1 | call autolinker#EnableBuffer() | endif
     for s:item in g:autolinker_patterns
         exec 'autocmd BufWinEnter' s:item 'if empty(g:autolinker_exclude_filetypes_rx) || &filetype !~? g:autolinker_exclude_filetypes_rx | call autolinker#Ensure() | endif'
         exec 'autocmd BufWritePre,FileWritePre' s:item 'if (empty(g:autolinker_exclude_filetypes_rx) || &filetype !~? g:autolinker_exclude_filetypes_rx) && !filereadable(expand("<afile>")) | Alcachereset | endif'

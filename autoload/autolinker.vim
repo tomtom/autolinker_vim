@@ -1,8 +1,8 @@
 " @thor:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2016-02-10
-" @Revision:    894
+" @Last Change: 2016-03-22
+" @Revision:    913
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 115
@@ -215,6 +215,7 @@ endf
 
 function! s:prototype.WordLinks() dict abort "{{{3
     let files = s:Globpath(self.Dirname(), get(self, 'pattern', '*'))
+    Tlibtrace 'autolinker', len(files)
     " TLogVAR self.Dirname(), files
     let defs = {}
     let rootname = self.Rootname()
@@ -241,6 +242,7 @@ endf
 
 
 function! s:prototype.UninstallHotkey() abort dict "{{{3
+    Tlibtrace 'autolinker', bufnr('%'), g:autolinker#nmap, g:autolinker#imap, g:autolinker#xmap, g:autolinker#map_forward, g:autolinker#map_backward
     if !empty(g:autolinker#nmap)
         exec 'silent! nunmap <buffer>' g:autolinker#nmap
     endif
@@ -260,6 +262,7 @@ endf
 
 
 function! s:prototype.InstallHotkey() abort dict "{{{3
+    Tlibtrace 'autolinker', bufnr('%'), g:autolinker#nmap, g:autolinker#imap, g:autolinker#xmap, g:autolinker#map_forward, g:autolinker#map_backward
     if !empty(g:autolinker#nmap)
         exec 'silent! nnoremap <buffer>' g:autolinker#nmap ':call autolinker#Jump("n")<cr>'
     endif
@@ -302,7 +305,7 @@ endf
 
 
 function! s:prototype.Highlight() abort dict "{{{3
-    " TLogVAR self.use_highlight
+    Tlibtrace 'autolinker', self.use_highlight
     if !empty(self.use_highlight)
         if index(self.use_highlight, 'word') != -1
             call self.ClearHighlight()
@@ -610,10 +613,11 @@ function! autolinker#EnableBuffer() abort "{{{3
     if empty(ft)
         let ft = '<NONE>'
     endif
+    Tlibtrace 'autolinker', ft
     if !has_key(s:ft_prototypes, ft)
         let prototype = deepcopy(s:prototype)
-        for fft in [ft, substitute(ft, '\..\+$', '', ''), '']
-            Tlibtrace 'autolinker', fft, ft
+        for fft in tlib#list#Uniq([ft, substitute(ft, '\..\+$', '', ''), ''])
+            Tlibtrace 'autolinker', fft
             if empty(fft)
                 let s:ft_prototypes[ft] = prototype
             else
@@ -628,18 +632,23 @@ function! autolinker#EnableBuffer() abort "{{{3
         endfor
     endif
     let b:autolinker = copy(s:ft_prototypes[ft])
+    Tlibtrace 'autolinker', b:autolinker
     let b:autolinker.defs = b:autolinker.WordLinks()
     call b:autolinker.Highlight()
     call b:autolinker.InstallHotkey()
     for c in ['t', 'w', 'v', 's']
-        exec 'nnoremap' printf(g:autolinker#map_options, c) ':<C-U>let w:autolinker_'. c '= v:count<cr>'
+        let cmap = printf(g:autolinker#map_options, c)
+        Tlibtrace 'autolinker', cmap
+        exec 'nnoremap' cmap ':<C-U>let w:autolinker_'. c '= v:count<cr>'
     endfor
     call tlib#balloon#Register('autolinker#Balloon()')
-    let b:undo_ftplugin = 'call autolinker#DisableBuffer()'. (exists('b:undo_ftplugin') ? '|'. b:undo_ftplugin : '')
+    " let b:undo_ftplugin = 'call autolinker#DisableBuffer()'. (exists('b:undo_ftplugin') ? '|'. b:undo_ftplugin : '')
+    Tlibtrace 'autolinker', b:undo_ftplugin
 endf
 
 
 function! autolinker#DisableBuffer() abort "{{{3
+    Tlibtrace 'autolinker', &ft
     call tlib#balloon#Remove('autolinker#Balloon()')
     call b:autolinker.ClearHighlight()
     call b:autolinker.UninstallHotkey()
