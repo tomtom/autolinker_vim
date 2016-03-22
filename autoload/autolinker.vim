@@ -2,13 +2,13 @@
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Last Change: 2016-03-22
-" @Revision:    914
+" @Revision:    915
 
 
-if !exists('g:loaded_tlib') || g:loaded_tlib < 115
+if !exists('g:loaded_tlib') || g:loaded_tlib < 121
     runtime plugin/tlib.vim
-    if !exists('g:loaded_tlib') || g:loaded_tlib < 115
-        echoerr 'tlib >= 1.15 is required'
+    if !exists('g:loaded_tlib') || g:loaded_tlib < 121
+        echoerr 'tlib >= 1.21 is required'
         finish
     endif
 endif
