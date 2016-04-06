@@ -1,8 +1,8 @@
 " @Author:      Thomas Link (micathom AT gmail.com)
 " @GIT:         http://github.com/tomtom/autolinker_vim/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2016-03-22.
-" @Revision:    110
+" @Last Change: 2016-03-23.
+" @Revision:    118
 " GetLatestVimScripts: 5253 0 :AutoInstall: autolinker.vim
 " Automatic hyperlinks for any filetype
 
@@ -38,6 +38,12 @@ if !exists('g:autolinker_exclude_filetypes')
 endif
 
 
+if !exists('g:autolinker_install_syntax_events')
+    " :nodoc:
+    let g:autolinker_install_syntax_events = 'BufEnter,BufWinEnter,CursorHold,CursorHoldI,CursorMoved,CursorMovedI'   "{{{2
+endif
+
+
 
 " :nodoc:
 let g:autolinker_glob_cache = {}
@@ -50,7 +56,7 @@ augroup AutoLinker
     autocmd! AutoLinker
     autocmd FocusLost * Alcachereset
     autocmd BufWritePre,FileWritePre * if index(g:autolinker_filetypes, &ft, 0, 0) != -1 && !filereadable(expand("<afile>")) | Alcachereset | endif
-    autocmd FileType * if index(g:autolinker_filetypes, &ft, 0, 0) != -1 | call autolinker#EnableBuffer() | endif
+    autocmd FileType * if index(g:autolinker_filetypes, &ft, 0, 0) != -1 | exec 'autocmd AutoLinker' g:autolinker_install_syntax_events '<buffer> call autolinker#EnableFiletype()' | endif
     for s:item in g:autolinker_patterns
         exec 'autocmd BufWinEnter' s:item 'if empty(g:autolinker_exclude_filetypes_rx) || &filetype !~? g:autolinker_exclude_filetypes_rx | call autolinker#Ensure() | endif'
         exec 'autocmd BufWritePre,FileWritePre' s:item 'if (empty(g:autolinker_exclude_filetypes_rx) || &filetype !~? g:autolinker_exclude_filetypes_rx) && !filereadable(expand("<afile>")) | Alcachereset | endif'
