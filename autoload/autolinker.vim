@@ -1,8 +1,8 @@
 " @thor:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2016-03-31
-" @Revision:    989
+" @Last Change: 2016-06-15
+" @Revision:    1015
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 121
@@ -353,10 +353,7 @@ function! s:prototype.Edit(filename, postprocess) abort dict "{{{3
         endif
         return 1
     catch
-        echohl ErrorMsg
-        echom v:exception
-        echom v:throwpoint
-        echohl NONE
+        call tlib#notify#PrintError()
         return 0
     endtry
 endf
@@ -364,7 +361,8 @@ endf
 
 function! s:prototype.SplitFilename(filename) abort dict "{{{3
     Tlibtrace 'autolinker', a:filename
-    let fragment = matchstr(a:filename, '#\zs'. g:autolinker#fragment_rx)
+    " let fragment = matchstr(a:filename, '#\zs'. g:autolinker#fragment_rx)
+    let fragment = matchstr(a:filename, '#\zs.*$')
     if !empty(fragment)
         let filename = substitute(a:filename, '^.\{-}\zs#'. g:autolinker#fragment_rx, '', '')
         if !(filereadable(a:filename) && !filereadable(filename))
@@ -386,6 +384,7 @@ endf
 
 
 function! s:prototype.GetCFile() abort dict "{{{3
+    " TLogVAR self
     if !has_key(self, 'cfile')
         if stridx('in', self.mode) != -1
             if has_key(self, 'a_cfile')
@@ -393,9 +392,13 @@ function! s:prototype.GetCFile() abort dict "{{{3
             else
                 let cfile = expand("<cfile>")
             endif
-            " TLogVAR 1, self.cfile
+            let [cfile, postprocess] = self.SplitFilename(cfile)
+            " TLogVAR cfile, self.postprocess
             let self.cfile = self.CleanCFile(cfile)
-            " TLogVAR 2, self.cfile
+            if !empty(postprocess)
+                let self.postprocess = tlib#url#Decode(postprocess)
+            endif
+            " TLogVAR self.cfile
         elseif self.mode ==# 'v'
             let self.cfile = @"
         else
@@ -421,6 +424,11 @@ function! s:prototype.GetCWord() abort dict "{{{3
     endif
     Tlibtrace 'autolinker', self.cword
     return self.cword
+endf
+
+
+function! s:prototype.GetPostprocess() abort dict "{{{3
+    return get(self, 'postprocess', '')
 endf
 
 
@@ -491,7 +499,7 @@ endf
 
 
 function! s:prototype.Jump_def() abort dict "{{{3
-    let [cword, postprocess] = self.SplitFilename(self.GetCWord())
+    let cword = self.GetCWord()
     Tlibtrace 'autolinker', 'def', cword
     let exact = []
     let partly = []
@@ -517,20 +525,18 @@ function! s:prototype.Jump_def() abort dict "{{{3
     " TLogVAR filename, matches
     try
         if !empty(filename)
+            let postprocess = self.GetPostprocess()
             return self.Edit(filename, postprocess)
         endif
     catch
-        echohl ErrorMsg
-        echom v:exception
-        echom v:throwpoint
-        echohl NONE
+        call tlib#notify#PrintError()
     endtry
     return 0
 endf
 
 
 function! s:prototype.Jump_path() abort dict "{{{3
-    let [cfile, postprocess] = self.SplitFilename(self.GetCFile())
+    let cfile = self.GetCFile()
     Tlibtrace 'autolinker', 'path', cfile
     let matches = s:Globpath(&path, cfile .'*')
     let brx = '\C\V\%(\^\|\[\/]\)'. substitute(cfile, '[\/]', '\\[\\/]', 'g') .'.\[^.]\+\$'
@@ -546,6 +552,7 @@ function! s:prototype.Jump_path() abort dict "{{{3
         let filename = tlib#input#List('s', 'Select file:', matches)
     endif
     if !empty(filename)
+        let postprocess = self.GetPostprocess()
         return self.Edit(filename, postprocess)
     else
         return 0
@@ -568,7 +575,9 @@ endf
 
 
 function! s:prototype.Jump_fallback() abort dict "{{{3
-    let [cfile, postprocess] = self.SplitFilename(self.GetCFile())
+    let cfile = self.GetCFile()
+    " let postprocess = self.GetPostprocess()
+    " TLogVAR cfile, postprocess
     Tlibtrace 'autolinker', 'fallback', cfile
     try
         let fallback = self.fallback
@@ -586,10 +595,7 @@ function! s:prototype.Jump_fallback() abort dict "{{{3
             return 1
         endif
     catch
-        echohl ErrorMsg
-        echom v:exception
-        echom v:throwpoint
-        echohl NONE
+        call tlib#notify#PrintError()
     endtry
     return 0
 endf
@@ -734,12 +740,18 @@ endf
 
 function! autolinker#EditInPath(cfile) abort "{{{3
     Tlibtrace 'autolinker', a:cfile
-    let path = filter(split(&path, ','), '!empty(v:val)')
-    let filenames = map(path, 'tlib#file#Join([v:val, a:cfile], 1, 1)')
-    call insert(filenames, a:cfile)
-    let filenames = map(filenames, 'fnamemodify(v:val, ":p")')
-    let filenames = tlib#list#Uniq(filenames)
-    let filename = tlib#input#List('s', 'Select file:', filenames)
+    if tlib#file#IsAbsolute(a:cfile)
+        let filename = a:cfile
+    else
+        let path = filter(split(&path, ','), '!empty(v:val)')
+        Tlibtrace 'autolinker', path
+        let filenames = map(path, 'tlib#file#Join([v:val, a:cfile], 1, 1)')
+        Tlibtrace 'autolinker', filenames
+        call insert(filenames, a:cfile)
+        let filenames = map(filenames, 'fnamemodify(v:val, ":p")')
+        let filenames = tlib#list#Uniq(filenames)
+        let filename = tlib#input#List('s', 'Select file:', filenames)
+    endif
     return s:Edit(filename, '')
 endf
 
@@ -809,7 +821,11 @@ function! s:Edit(filename, postprocess) abort "{{{3
         let what = isdirectory(a:filename) ? 'dir' : 'file'
         call s:EditEdit(what, a:filename)
         if !empty(a:postprocess)
-            exec a:postprocess
+            try
+                silent exec a:postprocess
+            catch
+                call tlib#notify#PrintError()
+            endtry
         endif
         return 1
     endif
@@ -866,7 +882,13 @@ function! autolinker#FileSources(opts) abort "{{{3
         if rx =~ '^\^'
                     \ && (empty(g:autolinker#find_ignore_rx) || rx !~ g:autolinker#find_ignore_rx)
                     \ && (empty(g:autolinker#find_ignore_subst) || subst !~ g:autolinker#find_ignore_subst)
-            call add(globs, tlib#file#Join([subst, pattern]))
+            if subst =~# '\\\@<!\\\d'
+                let subst1 = substitute(subst, '\\\@<!\\\d', '*', 'g')
+                let subst1 = substitute(subst1, '\\\\', '\\', 'g')
+                call add(globs, subst1)
+            else
+                call add(globs, tlib#file#Join([subst, pattern]))
+            endif
         endif
     endfor
     Tlibtrace 'autolinker', globs

@@ -1,8 +1,8 @@
 " @Author:      Thomas Link (micathom AT gmail.com)
 " @GIT:         http://github.com/tomtom/autolinker_vim/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2016-03-23.
-" @Revision:    118
+" @Last Change: 2016-06-06.
+" @Revision:    121
 " GetLatestVimScripts: 5253 0 :AutoInstall: autolinker.vim
 " Automatic hyperlinks for any filetype
 
@@ -80,7 +80,7 @@ command! -bar -bang -nargs=+ Algrep if exists(':Trag') == 2 | Trag<bang> --filen
 
 
 " Find a file via |:Tragfiles|.
-command! -bar -bang -nargs=* -complete=customlist,trag#CComplete Alfind if exists(':Tragfiles') == 2 | Tragfiles<bang> --filenames --file_sources=*autolinker#FileSources <args> | else | echom ':Alfind requires the trag_vim plugin to be installed!' | endif
+command! -bar -bang -nargs=* -complete=customlist,trag#CComplete Alfind if exists(':Tragfiles') == 2 | Tragfiles<bang> --grep_filenames --no-grep_text --file_sources=*autolinker#FileSources <args> | else | echom ':Alfind requires the trag_vim plugin to be installed!' | endif
 
 
 let &cpo = s:save_cpo

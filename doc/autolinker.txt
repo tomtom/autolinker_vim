@@ -110,6 +110,7 @@ Contents~
         prototype.SplitFilename
         prototype.GetCFile
         prototype.GetCWord
+        prototype.GetPostprocess
         prototype.CleanCWord
         prototype.CleanCFile
         prototype.IsInternalLink
@@ -121,6 +122,7 @@ Contents~
         prototype.Jump_tag
         prototype.Jump_fallback
         autolinker#Ensure ..................... |autolinker#Ensure()|
+        autolinker#EnableFiletype ............. |autolinker#EnableFiletype()|
         autolinker#EnableBuffer ............... |autolinker#EnableBuffer()|
         autolinker#DisableBuffer .............. |autolinker#DisableBuffer()|
         autolinker#Balloon .................... |autolinker#Balloon()|
@@ -266,15 +268,15 @@ g:autolinker#map_options       (default: '<LocalLeader>a%s')
       2\awgz ... Open the destination in the second window
 
                                                     *g:autolinker#layout*
-g:autolinker#layout            (default: {'*': ['tab drop', 'fnameescape'], 'w': ['<count>wincmd w'], 't': ['<count>tabn'], 's': ['<count>split'], 'v': ['vert <count>split']})
+g:autolinker#layout            (default: {'*': {'cmd_dir': '%{CMD}', 'cmd_file': 'tab drop %{FILENAMEX}'}, 'w': {'cmd': '<count>wincmd w | %{CMD}'}, 't': {'cmd': '<count>tabn | %{CMD}'}, 's': {'cmd': '<count>split +%{CMD}'}, 'v': {'cmd': '<count>vsplit +%{CMD}'}})
     Command for working with layouts.
 
                                                     *g:autolinker#edit_file*
-g:autolinker#edit_file         (default: ['edit', 'fnameescape'])
+g:autolinker#edit_file         (default: {'cmd': 'edit %{FILENAMEX}'})
     Command for opening files.
 
                                                     *g:autolinker#edit_dir*
-g:autolinker#edit_dir          (default: ['Explore'])
+g:autolinker#edit_dir          (default: {'cmd': 'Explore %{FILENAMEX}'})
     Command for opening directories
 
                                                     *g:autolinker#tag*
@@ -292,7 +294,7 @@ g:autolinker#fallback          (default: ':call autolinker#EditInPath("%s"),gf,g
 
     Possible values are:
     - gf
-    - ':'. g:autolinker#edit_file[0] (if you want to create new files)
+    - ':'. g:autolinker#edit_file.cmd (if you want to create new files)
 
                                                     *g:autolinker#index*
 g:autolinker#index             (default: '"index.". expand("%:e")')
@@ -359,6 +361,8 @@ prototype.GetCFile
 
 prototype.GetCWord
 
+prototype.GetPostprocess
+
 prototype.CleanCWord
 
 prototype.CleanCFile
@@ -381,6 +385,9 @@ prototype.Jump_fallback
 
                                                     *autolinker#Ensure()*
 autolinker#Ensure()
+
+                                                    *autolinker#EnableFiletype()*
+autolinker#EnableFiletype()
 
                                                     *autolinker#EnableBuffer()*
 autolinker#EnableBuffer()
