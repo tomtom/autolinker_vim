@@ -1,8 +1,8 @@
 " @thor:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2016-06-15
-" @Revision:    1015
+" @Last Change: 2016-07-15
+" @Revision:    1029
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 121
@@ -360,7 +360,7 @@ endf
 
 
 function! s:prototype.SplitFilename(filename) abort dict "{{{3
-    Tlibtrace 'autolinker', a:filename
+    Tlibtrace 'autolinker', 'SplitFilename', a:filename
     " let fragment = matchstr(a:filename, '#\zs'. g:autolinker#fragment_rx)
     let fragment = matchstr(a:filename, '#\zs.*$')
     if !empty(fragment)
@@ -392,9 +392,10 @@ function! s:prototype.GetCFile() abort dict "{{{3
             else
                 let cfile = expand("<cfile>")
             endif
-            let [cfile, postprocess] = self.SplitFilename(cfile)
-            " TLogVAR cfile, self.postprocess
-            let self.cfile = self.CleanCFile(cfile)
+            let [cfile_raw, postprocess] = self.SplitFilename(cfile)
+            Tlibtrace 'autolinker', cfile_raw, postprocess
+            " TLogVAR cfile_raw, postprocess
+            let self.cfile = self.CleanCFile(cfile_raw)
             if !empty(postprocess)
                 let self.postprocess = tlib#url#Decode(postprocess)
             endif
@@ -405,7 +406,7 @@ function! s:prototype.GetCFile() abort dict "{{{3
             throw 'AutoLinker: Unsupported mode: '. self.mode
         endif
     endif
-    Tlibtrace 'autolinker', self.cfile
+    Tlibtrace 'autolinker', 'GetCFile', self.cfile
     return self.cfile
 endf
 
@@ -439,20 +440,25 @@ endf
 
 
 function! s:prototype.CleanCFile(text, ...) abort dict "{{{3
-    Tlibtrace 'autolinker', a:text, a:000
+    Tlibtrace 'autolinker', 'CleanCFile', a:text, a:000
     let strip = a:0 >= 1 ? a:1 : 1
     let text = a:text
     if strip && !empty(self.cfile_rstrip_rx)
         let text = substitute(text, self.cfile_rstrip_rx .'$', '', '')
     endif
-    if !empty(&includeexpr)
-        let text = eval(substitute(&includeexpr, 'v:fname', string(a:text), 'g'))
-    endif
     " TLogVAR text
     " TODO: file:// & root:// should be treated differently
-    if text =~ '^\%(file\|root\)://'
-        let text = tlib#url#Decode(substitute(text, '^\%(file\|root\)://', '', ''))
+    Tlibtrace 'autolinker', 1, text
+    if text =~? '^[a-z0-9]\+://'
+        if text =~ '^\%(file\|root\)://'
+            let text = tlib#url#Decode(substitute(text, '^\%(file\|root\)://', '', ''))
+        endif
+    else
+        if !empty(&includeexpr)
+            let text = eval(substitute(&includeexpr, 'v:fname', string(a:text), 'g'))
+        endif
     endif
+    Tlibtrace 'autolinker', 2, text
     for [rx, sub; rest] in self.cfile_gsub
         let opts = get(rest, 0, {})
         let text1 = substitute(text, '\m\C'. rx, sub, get(opts, 'flags', 'g'))
@@ -462,6 +468,7 @@ function! s:prototype.CleanCFile(text, ...) abort dict "{{{3
         " TLogVAR rx, sub, text1
         let text = text1
     endfor
+    Tlibtrace 'autolinker', 3, text
     return text
 endf
 
