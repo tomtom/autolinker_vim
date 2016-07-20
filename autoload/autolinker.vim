@@ -1,8 +1,8 @@
 " @thor:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2016-07-15
-" @Revision:    1029
+" @Last Change: 2016-07-20
+" @Revision:    1057
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 121
@@ -24,7 +24,7 @@ endif
 
 
 if !exists('g:autolinker#url_rx')
-    let g:autolinker#url_rx = '\l\{2,6}://[-./[:alnum:]_+~=%#?&]\+'   "{{{2
+    let g:autolinker#url_rx = '\%(\l\{2,6}://\|mailto:\)[-@./[:alnum:]_+~=%#?&]\+'   "{{{2
     " let g:autolinker#url_rx = '\<\%(ht\|f\)tps\?:\/\/\f\+'   "{{{2
 endif
 
@@ -362,20 +362,41 @@ endf
 function! s:prototype.SplitFilename(filename) abort dict "{{{3
     Tlibtrace 'autolinker', 'SplitFilename', a:filename
     " let fragment = matchstr(a:filename, '#\zs'. g:autolinker#fragment_rx)
-    let fragment = matchstr(a:filename, '#\zs.*$')
-    if !empty(fragment)
-        let filename = substitute(a:filename, '^.\{-}\zs#'. g:autolinker#fragment_rx, '', '')
-        if !(filereadable(a:filename) && !filereadable(filename))
+    let postprocess = ''
+    let filename = substitute(a:filename, '^.\{-}\zs[?#].*$', '', '')
+    if !(filereadable(a:filename) && !filereadable(filename))
+        let query = matchstr(a:filename, '?\zs[^#]\+')
+        if !empty(query)
+            Tlibtrace 'autolinker', query
+            if query =~# '^lnum=\d\+$'
+                let postprocess = substitute(query, '^lnum=', '', '')
+            elseif query =~# '^q=\S\+$'
+                let postprocess = '/'. escape(substitute(query, '^q=', '', ''), '/')
+            else
+                throw 'autolinker.SplitFilename: Unsupported query: '. a:filename
+            endif
+            Tlibtrace 'autolinker', query, postprocess
+            return [filename, postprocess]
+        endif
+        let fragment = matchstr(a:filename, '#\zs.*$')
+        if !empty(fragment)
+            Tlibtrace 'autolinker', fragment
             if fragment =~# '^\d\+$'
                 let postprocess = fragment
             elseif fragment =~# '^lnum=\d\+$'
+                echohl WarningMsg
+                echom 'autolinker: Deprecated: Please use ?lnum=TEXT instead:' string(fragment)
+                echohl NONE
                 let postprocess = substitute(fragment, '^lnum=', '', '')
             elseif fragment =~# '^q=\S\+$'
+                echohl WarningMsg
+                echom 'autolinker: Deprecated: Please use ?q=TEXT instead:' string(fragment)
+                echohl NONE
                 let postprocess = '/'. escape(substitute(fragment, '^q=', '', ''), '/')
             else
-                throw 'autolinker.SplitFilename: Internal error: '. a:filename
+                let postprocess = '/'. escape(fragment, '/')
             endif
-            Tlibtrace 'autolinker', filename, postprocess
+            Tlibtrace 'autolinker', fragment, postprocess
             return [filename, postprocess]
         endif
     endif
