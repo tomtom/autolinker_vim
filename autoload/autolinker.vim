@@ -1,8 +1,8 @@
 " @thor:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2016-07-20
-" @Revision:    1057
+" @Last Change: 2016-07-28
+" @Revision:    1058
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 121
@@ -384,14 +384,14 @@ function! s:prototype.SplitFilename(filename) abort dict "{{{3
             if fragment =~# '^\d\+$'
                 let postprocess = fragment
             elseif fragment =~# '^lnum=\d\+$'
-                echohl WarningMsg
-                echom 'autolinker: Deprecated: Please use ?lnum=TEXT instead:' string(fragment)
-                echohl NONE
+                " echohl WarningMsg
+                " echom 'autolinker: Deprecated: Please use ?lnum=TEXT instead:' string(fragment)
+                " echohl NONE
                 let postprocess = substitute(fragment, '^lnum=', '', '')
             elseif fragment =~# '^q=\S\+$'
-                echohl WarningMsg
-                echom 'autolinker: Deprecated: Please use ?q=TEXT instead:' string(fragment)
-                echohl NONE
+                " echohl WarningMsg
+                " echom 'autolinker: Deprecated: Please use ?q=TEXT instead:' string(fragment)
+                " echohl NONE
                 let postprocess = '/'. escape(substitute(fragment, '^q=', '', ''), '/')
             else
                 let postprocess = '/'. escape(fragment, '/')
