@@ -24,7 +24,7 @@ endif
 
 
 if !exists('g:autolinker#url_rx')
-    let g:autolinker#url_rx = '\%(\l\{2,6}://\|mailto:\)[-@./[:alnum:]_+~=%#?&]\+'   "{{{2
+    let g:autolinker#url_rx = '\%(\w\{1,10}://\|mailto:\)[-@./[:alnum:]_+~=%#?&]\+'   "{{{2
     " let g:autolinker#url_rx = '\<\%(ht\|f\)tps\?:\/\/\f\+'   "{{{2
 endif
 
