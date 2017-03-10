@@ -1,8 +1,8 @@
 " @thor:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2016-07-28
-" @Revision:    1058
+" @Last Change: 2017-03-09
+" @Revision:    1071
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 121
@@ -70,15 +70,20 @@ if !exists('g:autolinker#map_backward')
 endif
 
 
-if !exists('g:autolinker#map_options')
-    " Call this map with a count and a char (w = window, t = tab, s = 
-    " split, v = vertical split) to define where the destination should 
-    " be displayed.
+if !exists('g:autolinker#map_prefix')
+    " A prefix for miscellaneous commands:
+    "
+    " / ... Scan all known files for the word under the cursor
+    " ? ... Search all known file names for the word under the cursor
+    "
+    " With a count and a char (w = window, t = tab, s = split, v = 
+    " vertical split) ... define where the destination should be 
+    " displayed.
     "
     " Let's assume |maplocalleader| is '\'. Then, e.g.,
     "   \asgz .... Open the destination in a split buffer
     "   2\awgz ... Open the destination in the second window
-    let g:autolinker#map_options = '<LocalLeader>a%s'   "{{{2
+    let g:autolinker#map_prefix = '<LocalLeader>a%s'   "{{{2
 endif
 
 
@@ -291,7 +296,7 @@ endf
 
 
 function! s:prototype.CfileGsubRx() abort dict "{{{3
-    let crx = []
+    let crx = ['\/', '\~\/', '\.\/', '\u:\/']
     for [rx, subst; rest] in self.cfile_gsub
         let rxs = substitute(rx, '\^', '', 'g')
         " let rxs = substitute(rxs, '[\\/]', '[\\\\/]', 'g')
@@ -675,10 +680,12 @@ function! autolinker#EnableBuffer() abort "{{{3
     call b:autolinker.Highlight()
     call b:autolinker.InstallHotkey()
     for c in ['t', 'w', 'v', 's']
-        let cmap = printf(g:autolinker#map_options, c)
+        let cmap = printf(g:autolinker#map_prefix, c)
         " Tlibtrace 'autolinker', cmap
         exec 'nnoremap' cmap ':<C-U>let w:autolinker_'. c '= v:count<cr>'
     endfor
+    exec 'nnoremap' printf(g:autolinker#map_prefix, '?') ':<C-U>Alfind <c-r><c-w><cr>'
+    exec 'nnoremap' printf(g:autolinker#map_prefix, '/') ':<C-U>Algrep <c-r><c-w><cr>'
     call tlib#balloon#Register('autolinker#Balloon()')
     let b:undo_ftplugin = 'call autolinker#DisableBuffer()'. (exists('b:undo_ftplugin') ? '|'. b:undo_ftplugin : '')
     Tlibtrace 'autolinker', b:undo_ftplugin
