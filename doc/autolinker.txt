@@ -54,95 +54,31 @@ Also available on https://github.com/tomtom/autolinker_vim
 ========================================================================
 Contents~
 
-        g:autolinker_filetypes ................ |g:autolinker_filetypes|
-        g:autolinker_patterns ................. |g:autolinker_patterns|
         g:autolinker_exclude_filetypes_rx ..... |g:autolinker_exclude_filetypes_rx|
         :Albuffer ............................. |:Albuffer|
         :Aledit ............................... |:Aledit|
         :Algrep ............................... |:Algrep|
         :Alfind ............................... |:Alfind|
-        prototype.CleanCFile
-        prototype.IsInternalLink
-        autolinker#ft_viki#GetInstance ........ |autolinker#ft_viki#GetInstance()|
-        prototype.Dispatch
-        prototype.BaseNameLinks
-        prototype.Dirname
-        prototype.Rootname
-        prototype.Highlight
-        prototype.Jump_system
-        prototype.Jump_def
-        prototype.Jump_path
-        prototype.Jump_tag
-        prototype.Jump_fallback
-        prototype.CleanCFile
-        prototype.JumpInternalLink
-        prototype.IsInternalLink
-        autolinker#ft_markdown#GetInstance .... |autolinker#ft_markdown#GetInstance()|
         g:autolinker#use_highlight ............ |g:autolinker#use_highlight|
-        g:autolinker#url_rx ................... |g:autolinker#url_rx|
         g:autolinker#types .................... |g:autolinker#types|
         g:autolinker#nmap ..................... |g:autolinker#nmap|
         g:autolinker#imap ..................... |g:autolinker#imap|
         g:autolinker#xmap ..................... |g:autolinker#xmap|
-        g:autolinker#map_forward .............. |g:autolinker#map_forward|
-        g:autolinker#map_backward ............. |g:autolinker#map_backward|
-        g:autolinker#map_options .............. |g:autolinker#map_options|
+        g:autolinker#map_prefix ............... |g:autolinker#map_prefix|
         g:autolinker#layout ................... |g:autolinker#layout|
         g:autolinker#edit_file ................ |g:autolinker#edit_file|
         g:autolinker#edit_dir ................. |g:autolinker#edit_dir|
-        g:autolinker#tag ...................... |g:autolinker#tag|
         g:autolinker#fallback ................. |g:autolinker#fallback|
         g:autolinker#index .................... |g:autolinker#index|
         g:autolinker#cfile_gsub ............... |g:autolinker#cfile_gsub|
         g:autolinker#cfile_rstrip_rx .......... |g:autolinker#cfile_rstrip_rx|
         g:autolinker#find_ignore_rx ........... |g:autolinker#find_ignore_rx|
         g:autolinker#find_ignore_subst ........ |g:autolinker#find_ignore_subst|
-        g:autolinker#fragment_rx .............. |g:autolinker#fragment_rx|
-        prototype.WordLinks
-        prototype.Dirname
-        prototype.Rootname
-        prototype.UninstallHotkey
-        prototype.InstallHotkey
-        prototype.ClearHighlight
-        prototype.CfileGsubRx
-        prototype.Highlight
-        prototype.Edit
-        prototype.SplitFilename
-        prototype.GetCFile
-        prototype.GetCWord
-        prototype.GetPostprocess
-        prototype.CleanCWord
-        prototype.CleanCFile
-        prototype.IsInternalLink
-        prototype.JumpInternalLink
-        prototype.Jump_internal
-        prototype.Jump_system
-        prototype.Jump_def
-        prototype.Jump_path
-        prototype.Jump_tag
-        prototype.Jump_fallback
-        autolinker#Ensure ..................... |autolinker#Ensure()|
-        autolinker#EnableFiletype ............. |autolinker#EnableFiletype()|
-        autolinker#EnableBuffer ............... |autolinker#EnableBuffer()|
-        autolinker#DisableBuffer .............. |autolinker#DisableBuffer()|
-        autolinker#Balloon .................... |autolinker#Balloon()|
         autolinker#Jump ....................... |autolinker#Jump()|
-        autolinker#Edit ....................... |autolinker#Edit()|
-        autolinker#EditInPath ................. |autolinker#EditInPath()|
-        autolinker#NextLink ................... |autolinker#NextLink()|
-        autolinker#FileSources ................ |autolinker#FileSources()|
-        autolinker#CompleteFilename ........... |autolinker#CompleteFilename()|
 
 
-========================================================================
-plugin/autolinker.vim~
-
-                                                    *g:autolinker_filetypes*
-g:autolinker_filetypes         (default: ['text', 'txt', 'todo', 'ttodo', 'todotxt', 'md', 'markdown', 'markdown.pandoc', 'tex', 'latex'])
-
-                                                    *g:autolinker_patterns*
-g:autolinker_patterns          (default: ['*.txt', '*.TXT', '*.md', '*.markdown'])
-
+------------------------------------------------------------------------
+                                                    *plugin/autolinker.vim*
                                                     *g:autolinker_exclude_filetypes_rx*
 g:autolinker_exclude_filetypes_rx (default: '')
     Don't enable autolinker for filetypes matching this |regexp| 
@@ -167,66 +103,14 @@ g:autolinker_exclude_filetypes_rx (default: '')
     Find a file via |:Tragfiles|.
 
 
-========================================================================
-autoload/autolinker/ft_viki.vim~
-
-prototype.CleanCFile
-
-prototype.IsInternalLink
-
-                                                    *autolinker#ft_viki#GetInstance()*
-autolinker#ft_viki#GetInstance(prototype)
-
-
-========================================================================
-autoload/autolinker/prototype.vim~
-
-prototype.Dispatch
-
-prototype.BaseNameLinks
-
-prototype.Dirname
-
-prototype.Rootname
-
-prototype.Highlight
-
-prototype.Jump_system
-
-prototype.Jump_def
-
-prototype.Jump_path
-
-prototype.Jump_tag
-
-prototype.Jump_fallback
-
-
-========================================================================
-autoload/autolinker/ft_markdown.vim~
-
-prototype.CleanCFile
-
-prototype.JumpInternalLink
-
-prototype.IsInternalLink
-
-                                                    *autolinker#ft_markdown#GetInstance()*
-autolinker#ft_markdown#GetInstance(prototype)
-
-
-========================================================================
-autoload/autolinker.vim~
-
+------------------------------------------------------------------------
+                                                    *autoload/autolinker.vim*
                                                     *g:autolinker#use_highlight*
 g:autolinker#use_highlight     (default: ['word', 'url', 'cfile_gsub'])
     Items that should be highlighted as hyperlinks:
     - word
     - url
     - cfile_gsub
-
-                                                    *g:autolinker#url_rx*
-g:autolinker#url_rx            (default: '\l\{2,6}://[-./[:alnum:]_+~=%#?&]\+')
 
                                                     *g:autolinker#types*
 g:autolinker#types             (default: ['internal', 'system', 'path', 'def', 'tag', 'fallback'])
@@ -251,17 +135,16 @@ g:autolinker#imap              (default: '<unique> <c-cr>')
 g:autolinker#xmap              (default: g:autolinker#nmap)
     Visual mode map.
 
-                                                    *g:autolinker#map_forward*
-g:autolinker#map_forward       (default: ']'. g:autolinker#nmap)
+                                                    *g:autolinker#map_prefix*
+g:autolinker#map_prefix        (default: '<LocalLeader>a%s')
+    A prefix for miscellaneous commands:
 
-                                                    *g:autolinker#map_backward*
-g:autolinker#map_backward      (default: '['. g:autolinker#nmap)
+    / ... Scan all known files for the word under the cursor
+    ? ... Search all known file names for the word under the cursor
 
-                                                    *g:autolinker#map_options*
-g:autolinker#map_options       (default: '<LocalLeader>a%s')
-    Call this map with a count and a char (w = window, t = tab, s = 
-    split, v = vertical split) to define where the destination should 
-    be displayed.
+    With a count and a char (w = window, t = tab, s = split, v = 
+    vertical split) ... define where the destination should be 
+    displayed.
 
     Let's assume |maplocalleader| is '\'. Then, e.g.,
       \asgz .... Open the destination in a split buffer
@@ -278,9 +161,6 @@ g:autolinker#edit_file         (default: {'cmd': 'edit %{FILENAMEX}'})
                                                     *g:autolinker#edit_dir*
 g:autolinker#edit_dir          (default: {'cmd': 'Explore %{FILENAMEX}'})
     Command for opening directories
-
-                                                    *g:autolinker#tag*
-g:autolinker#tag               (default: 'tselect')
 
                                                     *g:autolinker#fallback*
 g:autolinker#fallback          (default: ':call autolinker#EditInPath("%s"),gf,gx')
@@ -334,70 +214,6 @@ g:autolinker#find_ignore_subst (default: '^\a\{2,}:')
     |autolinker#Find()| ignores substitutions from 
     |g:autolinker#cfile_gsub| that match this |regexp|.
 
-                                                    *g:autolinker#fragment_rx*
-g:autolinker#fragment_rx       (default: '\%(\d\+\|lnum=\d\+\|q=\S\+\)$')
-
-prototype.WordLinks
-
-prototype.Dirname
-
-prototype.Rootname
-
-prototype.UninstallHotkey
-
-prototype.InstallHotkey
-
-prototype.ClearHighlight
-
-prototype.CfileGsubRx
-
-prototype.Highlight
-
-prototype.Edit
-
-prototype.SplitFilename
-
-prototype.GetCFile
-
-prototype.GetCWord
-
-prototype.GetPostprocess
-
-prototype.CleanCWord
-
-prototype.CleanCFile
-
-prototype.IsInternalLink
-
-prototype.JumpInternalLink
-
-prototype.Jump_internal
-
-prototype.Jump_system
-
-prototype.Jump_def
-
-prototype.Jump_path
-
-prototype.Jump_tag
-
-prototype.Jump_fallback
-
-                                                    *autolinker#Ensure()*
-autolinker#Ensure()
-
-                                                    *autolinker#EnableFiletype()*
-autolinker#EnableFiletype()
-
-                                                    *autolinker#EnableBuffer()*
-autolinker#EnableBuffer()
-
-                                                    *autolinker#DisableBuffer()*
-autolinker#DisableBuffer()
-
-                                                    *autolinker#Balloon()*
-autolinker#Balloon()
-
                                                     *autolinker#Jump()*
 autolinker#Jump(mode)
     Jump to the destination descibed by the word under the cursor. Use one 
@@ -408,21 +224,6 @@ autolinker#Jump(mode)
     3. Jump to a file in 'path' mathing the word under cursor
     4. Jump to a tag
     As last resort use |g:autolinker#fallback|
-
-                                                    *autolinker#Edit()*
-autolinker#Edit(cfile)
-
-                                                    *autolinker#EditInPath()*
-autolinker#EditInPath(cfile)
-
-                                                    *autolinker#NextLink()*
-autolinker#NextLink(n)
-
-                                                    *autolinker#FileSources()*
-autolinker#FileSources(opts)
-
-                                                    *autolinker#CompleteFilename()*
-autolinker#CompleteFilename(ArgLead, CmdLine, CursorPos)
 
 
 
