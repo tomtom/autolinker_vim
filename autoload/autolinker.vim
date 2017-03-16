@@ -1,8 +1,8 @@
 " @thor:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2017-03-09
-" @Revision:    1071
+" @Last Change: 2017-03-16
+" @Revision:    1072
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 121
@@ -756,9 +756,9 @@ function! s:Jump(autolinker, recursive) abort "{{{3
     endfor
     if !a:recursive
         echom 'Autolinker: I can''t dance --' a:autolinker.GetCFile()
-        let wvars = filter(w:, 'v:val =~ "^autolinker_"')
+        let wvars = filter(keys(w:), 'v:val =~ "^autolinker_"')
         if !empty(wvars)
-            exec 'unlet!' join(keys(map(wvars, '"w:". v:val')))
+            exec 'unlet!' join(map(wvars, '"w:". v:val'))
         endif
     endif
     return 0
