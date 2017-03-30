@@ -1,8 +1,8 @@
 " @thor:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2017-03-16
-" @Revision:    1072
+" @Last Change: 2017-03-30
+" @Revision:    1105
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 121
@@ -19,7 +19,8 @@ if !exists('g:autolinker#use_highlight')
     " - word
     " - url
     " - cfile_gsub
-    let g:autolinker#use_highlight = ['word', 'url', 'cfile_gsub']   "{{{2
+    " - hyperlinks_markup
+    let g:autolinker#use_highlight = ['word', 'url', 'cfile_gsub', 'hyperlinks_markup']   "{{{2
 endif
 
 
@@ -39,6 +40,28 @@ if !exists('g:autolinker#types')
     " - tag (tags)
     " - fallback (see |g:autolinker#fallback|)
     let g:autolinker#types = ['internal', 'system', 'path', 'def', 'tag', 'fallback']   "{{{2
+endif
+
+
+if !exists('g:autolinker#hyperlinks_markup_rx')
+    " Support for commonly used hyperlink markup:
+    " - [[LINK]]
+    " - [[LINK|TEXT]]
+    " - [[LINK][TEXT]]
+    " - [TEXT](LINK)
+    " - [url=LINK]TEXT[/url]
+    " - <a href="LINK">TEXT</a>
+    " - [[TEXT > LINK]]
+    " - [[TEXT >> LINK]]
+    " :read: let g:autolinker#hyperlinks_markup_rx = [...]   "{{{2
+    let g:autolinker#hyperlinks_markup_rx = [
+                \ '\[\[\zs[^]]\{-}[^|\]]*\ze[|\]]',
+                \ '\[\[\zs[^]]\{-}[^]]*\ze\]',
+                \ '\[[^]]\+\](\zs[^)]\+\ze)',
+                \ '\[url=\zs[^\]]\+\ze\]',
+                \ '<\zs[a-z]\+://[^>]\+\ze>',
+                \ '<a\s\+href="\zs[^"]\+\ze"',
+                \ '\[\[[^>\]]\+>>\?\s*\zs[^]]\+\ze\]']
 endif
 
 
@@ -185,6 +208,7 @@ let s:prototype = {'mode': 'n'
             \ , 'use_highlight': g:autolinker#use_highlight
             \ , 'cfile_gsub': g:autolinker#cfile_gsub
             \ , 'cfile_rstrip_rx': g:autolinker#cfile_rstrip_rx
+            \ , 'hyperlinks_markup_rx': g:autolinker#hyperlinks_markup_rx
             \ }
 
 
@@ -333,6 +357,11 @@ function! s:prototype.Highlight() abort dict "{{{3
                 exec 'syntax match AutoHyperlinkCfile /'. crx .'/'
             endif
         endif
+        if index(self.use_highlight, 'hyperlinks_markup') != -1
+            for rx in self.hyperlinks_markup_rx
+                exec 'syntax match AutoHyperlinkCfile /'. escape(rx, '/') .'/'
+            endfor
+        endif
         " let col = &background == 'dark' ? 'Cyan' : 'DarkBlue'
         " exec 'hi AutoHyperlink term=underline cterm=underline gui=underline ctermfg='. col 'guifg='. col
         hi AutoHyperlinkWord term=underline cterm=underline gui=underline
@@ -416,7 +445,25 @@ function! s:prototype.GetCFile() abort dict "{{{3
             if has_key(self, 'a_cfile')
                 let cfile = self.a_cfile
             else
-                let cfile = expand("<cfile>")
+                let line = getline('.')
+                let cfile = ''
+                if has_key(self, 'ExpandCFile')
+                    let cfile = self.ExpandCFile()
+                    Tlibtrace 'autolinker', 'GetCFile', 'ExpandCFile', cfile
+                else
+                    for rx0 in self.hyperlinks_markup_rx
+                        let rx = '\%<'. col('.') .'c'. rx0 .'\%>'. col('.') .'c'
+                        let cfile = matchstr(line, rx)
+                        Tlibtrace 'autolinker', 'GetCFile', rx, cfile
+                        if !empty(cfile)
+                            break
+                        endif
+                    endfor
+                    if empty(cfile)
+                        let cfile = expand("<cfile>")
+                        Tlibtrace 'autolinker', 'GetCFile', 'expand', cfile
+                    endif
+                endif
             endif
             let [cfile_raw, postprocess] = self.SplitFilename(cfile)
             Tlibtrace 'autolinker', cfile_raw, postprocess
