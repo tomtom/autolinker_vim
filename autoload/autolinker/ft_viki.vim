@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2017-03-30
-" @Revision:    34
+" @Last Change: 2017-04-02
+" @Revision:    41
 
 
 let s:prototype = {}
@@ -27,9 +27,26 @@ function! s:prototype.ExpandCFile() abort dict "{{{3
             if prefix !~# '[\/]$'
                 let prefix .= '/'
             endif
-            let suffix = exists('g:vikiInter'. iv .'_suffix') ? g:vikiInter{iv}_suffix : ''
+            let link = prefix . substitute(link, '^[^:]\+::', '', '')
+            if exists('g:vikiInter'. iv .'_suffix')
+                let link .= g:vikiInter{iv}_suffix
+            else
+                for l:sfx in ['e', 'b:viki_name_suffix', 'g:viki_name_suffix', 'b:vikiNameSuffix', 'g:vikiNameSuffix']
+                    if l:sfx ==# 'e'
+                        let l:suffix = '.'. expand('%:e')
+                    elseif exists(l:sfx)
+                        let l:suffix = eval(l:sfx)
+                    else
+                        continue
+                    endif
+                    let link1 = link . l:suffix
+                    if filereadable(link1)
+                        let link = link1
+                        break
+                    endif
+                endfor
+            endif
             Tlibtrace 'autolinker', 'ExpandCFile', prefix, suffix
-            let link = prefix . substitute(link, '^[^:]\+::', '', '') . suffix
             Tlibtrace 'autolinker', 'ExpandCFile', link
         endif
     else
