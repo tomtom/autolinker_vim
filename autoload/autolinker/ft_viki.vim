@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2017-04-02
-" @Revision:    41
+" @Last Change: 2017-04-04
+" @Revision:    49
 
 
 let s:prototype = {}
@@ -29,7 +29,7 @@ function! s:prototype.ExpandCFile() abort dict "{{{3
             endif
             let link = prefix . substitute(link, '^[^:]\+::', '', '')
             if exists('g:vikiInter'. iv .'_suffix')
-                let link .= g:vikiInter{iv}_suffix
+                let link = s:MaybeAppendSuffix(link, g:vikiInter{iv}_suffix)
             else
                 for l:sfx in ['e', 'b:viki_name_suffix', 'g:viki_name_suffix', 'b:vikiNameSuffix', 'g:vikiNameSuffix']
                     if l:sfx ==# 'e'
@@ -39,7 +39,7 @@ function! s:prototype.ExpandCFile() abort dict "{{{3
                     else
                         continue
                     endif
-                    let link1 = link . l:suffix
+                    let link1 = s:MaybeAppendSuffix(link, l:suffix)
                     if filereadable(link1)
                         let link = link1
                         break
@@ -54,6 +54,16 @@ function! s:prototype.ExpandCFile() abort dict "{{{3
         Tlibtrace 'autolinker', 'ExpandCFile', 'cfile', link
     endif
     return link
+endf
+
+
+function! s:MaybeAppendSuffix(text, suffix) abort "{{{3
+    let l:tsuf = a:text[-len(a:suffix) : -1]
+    if l:tsuf ==# a:suffix
+        return a:text
+    else
+        return a:text . a:suffix
+    endif
 endf
 
 
