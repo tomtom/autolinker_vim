@@ -1,8 +1,8 @@
 " @thor:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2017-03-30
-" @Revision:    1105
+" @Last Change: 2017-04-03
+" @Revision:    1132
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 121
@@ -158,22 +158,52 @@ endif
 
 
 if !exists('g:autolinker#cfile_gsub')
-    " A list of lists [RX, SUB, optional: {OPT => VALUE}] that are 
-    " applied to the |<cfile>| under the cursor. This can be used to 
-    " rewrite filenames and URLs, in order to implement e.g. interwikis.
-    "
+    " A list of lists that have either form
+    "   ['RX', 'SUBST'], ['RX', 'SUBST', {OPTION => VALUE}]
+    " or
+    "   ['RX', {'function': FUNCTION}].
+    " 
     " RX must be a |magic| |regexp|.
+    "
+    " In the first form, RX (a |regexp| |pattern|) is replaced with 
+    " SUBST in a filename. SUBST may contain group references. See 
+    " |sub-replace-special| for details.
+    "
+    " In the second form, FUNCTION is applied to the filename. The 
+    " filename usually is the |<cfile>| under the cursor.
+    "
+    " This can be used to rewrite filenames and URLs, in order to 
+    " implement e.g. interwikis.
+    "
+    " By default, the following prefixes are defined:
+    "
+    "   DOI:  ... https://dx.doi.org/
+    "   ISBN: ... https://www.worldcat.org/
+    "   PMID: ... https://www.ncbi.nlm.nih.gov/pubmed/
+    "
+    " NOTE: If you don't like the double-colon as separator, you can use 
+    " wiki-style markup to use a blank as separator: `[[PMID 123]]`.
     "
     " Options:
     "   flags = 'g' ... flags for |substitute()|
     "   stop = 0 ...... Don't process other gsubs when this |regexp| 
     "                   matches
     "
+    " The variable `g:autolinker#cfile_gsub_user` can be used to extend 
+    " the default value.
+    "
     " Examples:
     " ["^WIKI/", "~/MyWiki/"] .............. Redirect to wiki
     " ["^todo://", "~/data/simpletask/"] ... Use todo pseudo-protocol as 
     "                                        used by the simpletasks app
-    let g:autolinker#cfile_gsub = []   "{{{2
+    " :read: let g:autolinker#cfile_gsub = [...]   "{{{2
+    let g:autolinker#cfile_gsub = [
+            \ ['^DOI[: ]', 'https://dx.doi.org/'],
+            \ ['^ISBN[: ]', 'https://www.worldcat.org/search?q=isbn:'],
+            \ ['^PMID[: ]', 'https://www.ncbi.nlm.nih.gov/pubmed/']]
+endif
+if exists('g:autolinker#cfile_gsub_user')
+    let g:autolinker#cfile_gsub += g:autolinker#cfile_gsub_user
 endif
 
 
@@ -326,6 +356,7 @@ function! s:prototype.CfileGsubRx() abort dict "{{{3
         " let rxs = substitute(rxs, '[\\/]', '[\\\\/]', 'g')
         let rxs = escape(rxs, '/')
         call add(crx, rxs)
+        unlet subst
     endfor
     if empty(crx)
         let rv = ''
@@ -532,14 +563,23 @@ function! s:prototype.CleanCFile(text, ...) abort dict "{{{3
         endif
     endif
     Tlibtrace 'autolinker', 2, text
-    for [rx, sub; rest] in self.cfile_gsub
+    for [rx, subst; rest] in self.cfile_gsub
         let opts = get(rest, 0, {})
-        let text1 = substitute(text, '\m\C'. rx, sub, get(opts, 'flags', 'g'))
+        if type(subst) == 4
+            if has_key(subst, 'function')
+                let text1 = call(subst.function, [text])
+            else
+                throw 'Autolinker: Unsupported expansion value for cfile_gsub: '. string(subst)
+            endif
+        else
+            let text1 = substitute(text, '\m\C'. rx, subst, get(opts, 'flags', 'g'))
+        endif
         if get(opts, 'stop', 0) && text != text1
             break
         endif
-        " TLogVAR rx, sub, text1
+        " TLogVAR rx, subst, text1
         let text = text1
+        unlet subst
     endfor
     Tlibtrace 'autolinker', 3, text
     return text
@@ -961,7 +1001,8 @@ function! autolinker#FileSources(opts) abort "{{{3
     let cfile_gsub = exists('b:autolinker') ? b:autolinker.cfile_gsub : g:autolinker#cfile_gsub
     let pattern = get(a:opts, 'glob', get(a:opts, 'deep', 1) ? '**' : '*')
     for [rx, subst; rest] in cfile_gsub
-        if rx =~ '^\^'
+        if type(subst) == 1
+                    \ && rx =~ '^\^'
                     \ && (empty(g:autolinker#find_ignore_rx) || rx !~ g:autolinker#find_ignore_rx)
                     \ && (empty(g:autolinker#find_ignore_subst) || subst !~ g:autolinker#find_ignore_subst)
             if subst =~# '\\\@<!\\\d'
@@ -972,6 +1013,7 @@ function! autolinker#FileSources(opts) abort "{{{3
                 call add(globs, tlib#file#Join([subst, pattern]))
             endif
         endif
+        unlet subst
     endfor
     Tlibtrace 'autolinker', globs
     " TLogVAR globs
