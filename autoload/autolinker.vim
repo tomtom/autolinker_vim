@@ -2,7 +2,7 @@
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Last Change: 2017-04-04
-" @Revision:    1145
+" @Revision:    1146
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 121
@@ -834,8 +834,8 @@ function! autolinker#Balloon() abort "{{{3
     let cfile = tlib#balloon#Expand('<cfile>')
     let cfile = autolinker.CleanCFile(cfile)
     Tlibtrace 'autolinker', cfile
-    " TLogVAR cfile, tlib#sys#IsSpecial(cfile), self.Filereadable(cfile)
-    if !tlib#sys#IsSpecial(cfile) && self.Filereadable(cfile)
+    " TLogVAR cfile, tlib#sys#IsSpecial(cfile), autolinker.Filereadable(cfile)
+    if !tlib#sys#IsSpecial(cfile) && autolinker.Filereadable(cfile)
         let lines = readfile(cfile)
         return join(lines[0 : 5], "\n")
     elseif isdirectory(cfile)
