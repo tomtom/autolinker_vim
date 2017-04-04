@@ -2,7 +2,7 @@
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Last Change: 2017-04-04
-" @Revision:    49
+" @Revision:    57
 
 
 let s:prototype = {}
@@ -18,10 +18,10 @@ endf
 
 function! s:prototype.ExpandCFile() abort dict "{{{3
     let link = matchstr(getline('.'), '\[\[\zs[^]]\{-}\%'. col('.') .'c[^]]*\ze\]')
-    Tlibtrace 'autolinker', 'ExpandCFile', link
+    Tlibtrace 'autolinker', 'viki.ExpandCFile', link
     if !empty(link)
         let iv = matchstr(link, '^[A-Z0-9_]\+\ze::')
-        Tlibtrace 'autolinker', 'ExpandCFile', iv
+        Tlibtrace 'autolinker', 'viki.ExpandCFile', iv
         if !empty(iv)
             let prefix = exists('g:vikiInter'. iv) ? g:vikiInter{iv} : ''
             if prefix !~# '[\/]$'
@@ -30,28 +30,28 @@ function! s:prototype.ExpandCFile() abort dict "{{{3
             let link = prefix . substitute(link, '^[^:]\+::', '', '')
             if exists('g:vikiInter'. iv .'_suffix')
                 let link = s:MaybeAppendSuffix(link, g:vikiInter{iv}_suffix)
-            else
-                for l:sfx in ['e', 'b:viki_name_suffix', 'g:viki_name_suffix', 'b:vikiNameSuffix', 'g:vikiNameSuffix']
-                    if l:sfx ==# 'e'
-                        let l:suffix = '.'. expand('%:e')
-                    elseif exists(l:sfx)
-                        let l:suffix = eval(l:sfx)
-                    else
-                        continue
-                    endif
-                    let link1 = s:MaybeAppendSuffix(link, l:suffix)
-                    if filereadable(link1)
-                        let link = link1
-                        break
-                    endif
-                endfor
             endif
-            Tlibtrace 'autolinker', 'ExpandCFile', prefix, suffix
-            Tlibtrace 'autolinker', 'ExpandCFile', link
         endif
+        for l:sfx in ['e', 'b:viki_name_suffix', 'g:viki_name_suffix', 'b:vikiNameSuffix', 'g:vikiNameSuffix']
+            if l:sfx ==# 'e'
+                let l:suffix = '.'. expand('%:e')
+            elseif exists(l:sfx)
+                let l:suffix = eval(l:sfx)
+            else
+                continue
+            endif
+            Tlibtrace 'autolinker', 'viki.ExpandCFile', link, l:suffix
+            let link1 = self.CheckCFile(s:MaybeAppendSuffix(link, l:suffix))
+            Tlibtrace 'autolinker', 'viki.ExpandCFile', link1, self.Filereadable(link1)
+            if self.Filereadable(link1)
+                let link = link1
+                break
+            endif
+        endfor
+        Tlibtrace 'autolinker', 'viki.ExpandCFile', link
     else
         let link = expand('<cfile>')
-        Tlibtrace 'autolinker', 'ExpandCFile', 'cfile', link
+        Tlibtrace 'autolinker', 'viki.ExpandCFile', 'cfile', link
     endif
     return link
 endf
@@ -59,6 +59,7 @@ endf
 
 function! s:MaybeAppendSuffix(text, suffix) abort "{{{3
     let l:tsuf = a:text[-len(a:suffix) : -1]
+    Tlibtrace 'autolinker', a:text, a:suffix, l:tsuf
     if l:tsuf ==# a:suffix
         return a:text
     else

@@ -1,8 +1,8 @@
 " @thor:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2017-04-03
-" @Revision:    1132
+" @Last Change: 2017-04-04
+" @Revision:    1145
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 121
@@ -234,6 +234,7 @@ endif
 
 let s:prototype = {'mode': 'n'
             \ , 'fallback': g:autolinker#fallback
+            \ , 'filereadable': {}
             \ , 'types': g:autolinker#types
             \ , 'use_highlight': g:autolinker#use_highlight
             \ , 'cfile_gsub': g:autolinker#cfile_gsub
@@ -409,7 +410,7 @@ function! s:prototype.Edit(filename, postprocess) abort dict "{{{3
             let filename = a:filename
             if isdirectory(filename)
                 let index = filename .'/'. eval(g:autolinker#index)
-                if filereadable(index)
+                if self.Filereadable(index)
                     let filename = index
                 endif
             endif
@@ -429,7 +430,7 @@ function! s:prototype.SplitFilename(filename) abort dict "{{{3
     " let fragment = matchstr(a:filename, '#\zs'. g:autolinker#fragment_rx)
     let postprocess = ''
     let filename = substitute(a:filename, '^.\{-}\zs[?#].*$', '', '')
-    if !(filereadable(a:filename) && !filereadable(filename))
+    if !(self.Filereadable(a:filename) && !self.Filereadable(filename))
         let query = matchstr(a:filename, '?\zs[^#]\+')
         if !empty(query)
             Tlibtrace 'autolinker', query
@@ -469,6 +470,14 @@ function! s:prototype.SplitFilename(filename) abort dict "{{{3
 endf
 
 
+function! s:prototype.Filereadable(filename) abort dict "{{{3
+    if !has_key(self.filereadable, a:filename)
+        let self.filereadable[a:filename] = filereadable(a:filename)
+    endif
+    return self.filereadable[a:filename]
+endf
+
+
 function! s:prototype.GetCFile() abort dict "{{{3
     " TLogVAR self
     if !has_key(self, 'cfile')
@@ -499,7 +508,9 @@ function! s:prototype.GetCFile() abort dict "{{{3
             let [cfile_raw, postprocess] = self.SplitFilename(cfile)
             Tlibtrace 'autolinker', cfile_raw, postprocess
             " TLogVAR cfile_raw, postprocess
-            let self.cfile = self.CleanCFile(cfile_raw)
+            let ccfile = self.CleanCFile(cfile_raw)
+            Tlibtrace 'autolinker', ccfile
+            let self.cfile = self.CheckCFile(ccfile)
             if !empty(postprocess)
                 let self.postprocess = tlib#url#Decode(postprocess)
             endif
@@ -512,6 +523,30 @@ function! s:prototype.GetCFile() abort dict "{{{3
     endif
     Tlibtrace 'autolinker', 'GetCFile', self.cfile
     return self.cfile
+endf
+
+
+function! s:prototype.CheckCFile(cfile) abort dict "{{{3
+    " The file isn't readable respective to the CD. Check some 
+    " alternatives.
+    Tlibtrace 'autolinker', a:cfile
+    if !self.Filereadable(a:cfile)
+        let step = 0
+        while step < 1
+            let cfile = a:cfile
+            if step == 0
+                if cfile !~# '^\%(\w\+:\)\?/'
+                    let cfile = tlib#file#Join([expand('%:p:h'), cfile])
+                endif
+            endif
+            let step += 1
+            Tlibtrace 'autolinker', step, self.Filereadable(cfile), cfile
+            if self.Filereadable(cfile)
+                return cfile
+            endif
+        endwh
+    endif
+    return a:cfile
 endf
 
 
@@ -799,8 +834,8 @@ function! autolinker#Balloon() abort "{{{3
     let cfile = tlib#balloon#Expand('<cfile>')
     let cfile = autolinker.CleanCFile(cfile)
     Tlibtrace 'autolinker', cfile
-    " TLogVAR cfile, tlib#sys#IsSpecial(cfile), filereadable(cfile)
-    if !tlib#sys#IsSpecial(cfile) && filereadable(cfile)
+    " TLogVAR cfile, tlib#sys#IsSpecial(cfile), self.Filereadable(cfile)
+    if !tlib#sys#IsSpecial(cfile) && self.Filereadable(cfile)
         let lines = readfile(cfile)
         return join(lines[0 : 5], "\n")
     elseif isdirectory(cfile)
