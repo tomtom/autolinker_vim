@@ -2,7 +2,7 @@
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Last Change: 2017-04-04
-" @Revision:    57
+" @Revision:    58
 
 
 let s:prototype = {}
@@ -42,8 +42,8 @@ function! s:prototype.ExpandCFile() abort dict "{{{3
             endif
             Tlibtrace 'autolinker', 'viki.ExpandCFile', link, l:suffix
             let link1 = self.CheckCFile(s:MaybeAppendSuffix(link, l:suffix))
-            Tlibtrace 'autolinker', 'viki.ExpandCFile', link1, self.Filereadable(link1)
-            if self.Filereadable(link1)
+            Tlibtrace 'autolinker', 'viki.ExpandCFile', link1, tlib#file#Filereadable(link1)
+            if tlib#file#Filereadable(link1)
                 let link = link1
                 break
             endif

@@ -2,7 +2,7 @@
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Last Change: 2017-04-04
-" @Revision:    1146
+" @Revision:    1155
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 121
@@ -25,7 +25,7 @@ endif
 
 
 if !exists('g:autolinker#url_rx')
-    let g:autolinker#url_rx = '\%(\w\{1,10}://\|mailto:\)[-@./[:alnum:]_+~=%#?&]\+'   "{{{2
+    let g:autolinker#url_rx = '\<\%([a-zA-Z]\{2,10}://\|mailto:\)[-@./[:alnum:]_+~=%#?&]\+'   "{{{2
     " let g:autolinker#url_rx = '\<\%(ht\|f\)tps\?:\/\/\f\+'   "{{{2
 endif
 
@@ -234,7 +234,6 @@ endif
 
 let s:prototype = {'mode': 'n'
             \ , 'fallback': g:autolinker#fallback
-            \ , 'filereadable': {}
             \ , 'types': g:autolinker#types
             \ , 'use_highlight': g:autolinker#use_highlight
             \ , 'cfile_gsub': g:autolinker#cfile_gsub
@@ -377,21 +376,21 @@ function! s:prototype.Highlight() abort dict "{{{3
             let rx = join(map(values(self.defs), 'v:val.rx'), '\|')
             " TLogVAR rx
             if !empty(rx)
-                exec 'syntax match AutoHyperlinkWord /'. escape(rx, '/') .'/'
+                exec 'syntax match AutoHyperlinkWord /'. escape(rx, '/') .'/ containedin=ALL'
             endif
         endif
         if index(self.use_highlight, 'url') != -1
-            exec 'syntax match AutoHyperlinkURL /'. escape(g:autolinker#url_rx, '/') .'/'
+            exec 'syntax match AutoHyperlinkURL /'. escape(g:autolinker#url_rx, '/') .'/ containedin=ALL'
         endif
         if index(self.use_highlight, 'cfile_gsub') != -1
             let crx = self.CfileGsubRx()
             if !empty(crx)
-                exec 'syntax match AutoHyperlinkCfile /'. crx .'/'
+                exec 'syntax match AutoHyperlinkCfile /'. crx .'/ containedin=ALL'
             endif
         endif
         if index(self.use_highlight, 'hyperlinks_markup') != -1
             for rx in self.hyperlinks_markup_rx
-                exec 'syntax match AutoHyperlinkCfile /'. escape(rx, '/') .'/'
+                exec 'syntax match AutoHyperlinkCfile /'. escape(rx, '/') .'/ containedin=ALL'
             endfor
         endif
         " let col = &background == 'dark' ? 'Cyan' : 'DarkBlue'
@@ -410,7 +409,7 @@ function! s:prototype.Edit(filename, postprocess) abort dict "{{{3
             let filename = a:filename
             if isdirectory(filename)
                 let index = filename .'/'. eval(g:autolinker#index)
-                if self.Filereadable(index)
+                if tlib#file#Filereadable(index)
                     let filename = index
                 endif
             endif
@@ -430,7 +429,7 @@ function! s:prototype.SplitFilename(filename) abort dict "{{{3
     " let fragment = matchstr(a:filename, '#\zs'. g:autolinker#fragment_rx)
     let postprocess = ''
     let filename = substitute(a:filename, '^.\{-}\zs[?#].*$', '', '')
-    if !(self.Filereadable(a:filename) && !self.Filereadable(filename))
+    if !(tlib#file#Filereadable(a:filename) && !tlib#file#Filereadable(filename))
         let query = matchstr(a:filename, '?\zs[^#]\+')
         if !empty(query)
             Tlibtrace 'autolinker', query
@@ -467,14 +466,6 @@ function! s:prototype.SplitFilename(filename) abort dict "{{{3
         endif
     endif
     return [a:filename, '']
-endf
-
-
-function! s:prototype.Filereadable(filename) abort dict "{{{3
-    if !has_key(self.filereadable, a:filename)
-        let self.filereadable[a:filename] = filereadable(a:filename)
-    endif
-    return self.filereadable[a:filename]
 endf
 
 
@@ -530,7 +521,7 @@ function! s:prototype.CheckCFile(cfile) abort dict "{{{3
     " The file isn't readable respective to the CD. Check some 
     " alternatives.
     Tlibtrace 'autolinker', a:cfile
-    if !self.Filereadable(a:cfile)
+    if !tlib#file#Filereadable(a:cfile)
         let step = 0
         while step < 1
             let cfile = a:cfile
@@ -540,8 +531,8 @@ function! s:prototype.CheckCFile(cfile) abort dict "{{{3
                 endif
             endif
             let step += 1
-            Tlibtrace 'autolinker', step, self.Filereadable(cfile), cfile
-            if self.Filereadable(cfile)
+            Tlibtrace 'autolinker', step, tlib#file#Filereadable(cfile), cfile
+            if tlib#file#Filereadable(cfile)
                 return cfile
             endif
         endwh
@@ -834,8 +825,8 @@ function! autolinker#Balloon() abort "{{{3
     let cfile = tlib#balloon#Expand('<cfile>')
     let cfile = autolinker.CleanCFile(cfile)
     Tlibtrace 'autolinker', cfile
-    " TLogVAR cfile, tlib#sys#IsSpecial(cfile), autolinker.Filereadable(cfile)
-    if !tlib#sys#IsSpecial(cfile) && autolinker.Filereadable(cfile)
+    " TLogVAR cfile, tlib#sys#IsSpecial(cfile), tlib#file#Filereadable(cfile)
+    if !tlib#sys#IsSpecial(cfile) && tlib#file#Filereadable(cfile)
         let lines = readfile(cfile)
         return join(lines[0 : 5], "\n")
     elseif isdirectory(cfile)
