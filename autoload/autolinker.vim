@@ -1,8 +1,8 @@
 " @thor:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2017-04-04
-" @Revision:    1155
+" @Last Change: 2017-04-05
+" @Revision:    1164
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 121
@@ -45,19 +45,15 @@ endif
 
 if !exists('g:autolinker#hyperlinks_markup_rx')
     " Support for commonly used hyperlink markup:
-    " - [[LINK]]
-    " - [[LINK|TEXT]]
-    " - [[LINK][TEXT]]
+    " - [[LINK]], [[LINK|TEXT]], [[LINK][TEXT]]
+    " - [[TEXT > LINK]], [[TEXT >> LINK]]
     " - [TEXT](LINK)
     " - [url=LINK]TEXT[/url]
     " - <a href="LINK">TEXT</a>
-    " - [[TEXT > LINK]]
-    " - [[TEXT >> LINK]]
     " :read: let g:autolinker#hyperlinks_markup_rx = [...]   "{{{2
     let g:autolinker#hyperlinks_markup_rx = [
-                \ '\[\[\zs[^]]\{-}[^|\]]*\ze[|\]]',
-                \ '\[\[\zs[^]]\{-}[^]]*\ze\]',
-                \ '\[[^]]\+\](\zs[^)]\+\ze)',
+                \ '\[\[\zs.\{-}\ze[|\]]',
+                \ '\[[^\]]*\](\zs[^)]\+\ze)',
                 \ '\[url=\zs[^\]]\+\ze\]',
                 \ '<\zs[a-z]\+://[^>]\+\ze>',
                 \ '<a\s\+href="\zs[^"]\+\ze"',
