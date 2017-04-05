@@ -765,6 +765,9 @@ endf
 let s:ft_prototypes = {}
 
 function! autolinker#EnableBuffer() abort "{{{3
+    if exists('b:autolinker')
+        return
+    endif
     let ft = &ft
     if empty(ft)
         let ft = '<NONE>'
