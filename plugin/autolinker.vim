@@ -1,8 +1,8 @@
 " @Author:      Thomas Link (micathom AT gmail.com)
 " @GIT:         http://github.com/tomtom/autolinker_vim/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2016-06-06.
-" @Revision:    121
+" @Last Change: 2017-04-05.
+" @Revision:    122
 " GetLatestVimScripts: 5253 0 :AutoInstall: autolinker.vim
 " Automatic hyperlinks for any filetype
 
@@ -52,19 +52,6 @@ let g:autolinker_glob_cache = {}
 command! -bar Alcachereset let g:autolinker_glob_cache = {}
 
 
-augroup AutoLinker
-    autocmd! AutoLinker
-    autocmd FocusLost * Alcachereset
-    autocmd BufWritePre,FileWritePre * if index(g:autolinker_filetypes, &ft, 0, 0) != -1 && !filereadable(expand("<afile>")) | Alcachereset | endif
-    autocmd FileType * if index(g:autolinker_filetypes, &ft, 0, 0) != -1 | exec 'autocmd AutoLinker' g:autolinker_install_syntax_events '<buffer> call autolinker#EnableFiletype()' | endif
-    for s:item in g:autolinker_patterns
-        exec 'autocmd BufWinEnter' s:item 'if empty(g:autolinker_exclude_filetypes_rx) || &filetype !~? g:autolinker_exclude_filetypes_rx | call autolinker#Ensure() | endif'
-        exec 'autocmd BufWritePre,FileWritePre' s:item 'if (empty(g:autolinker_exclude_filetypes_rx) || &filetype !~? g:autolinker_exclude_filetypes_rx) && !filereadable(expand("<afile>")) | Alcachereset | endif'
-    endfor
-    unlet! s:item
-augroup end
-
-
 " Enable the autolinker plugin for the current buffer.
 command! -bar Albuffer call autolinker#EnableBuffer()
 
@@ -81,6 +68,25 @@ command! -bar -bang -nargs=+ Algrep if exists(':Trag') == 2 | Trag<bang> --filen
 
 " Find a file via |:Tragfiles|.
 command! -bar -bang -nargs=* -complete=customlist,trag#CComplete Alfind if exists(':Tragfiles') == 2 | Tragfiles<bang> --grep_filenames --no-grep_text --file_sources=*autolinker#FileSources <args> | else | echom ':Alfind requires the trag_vim plugin to be installed!' | endif
+
+
+augroup AutoLinker
+    autocmd! AutoLinker
+    autocmd FocusLost * Alcachereset
+    autocmd BufWritePre,FileWritePre * if index(g:autolinker_filetypes, &ft, 0, 0) != -1 && !filereadable(expand("<afile>")) | Alcachereset | endif
+    autocmd FileType * if index(g:autolinker_filetypes, &ft, 0, 0) != -1 | exec 'autocmd AutoLinker' g:autolinker_install_syntax_events '<buffer> call autolinker#EnableFiletype()' | endif
+    for s:item in g:autolinker_patterns
+        exec 'autocmd BufWinEnter' s:item 'if empty(g:autolinker_exclude_filetypes_rx) || &filetype !~? g:autolinker_exclude_filetypes_rx | call autolinker#Ensure() | endif'
+        exec 'autocmd BufWritePre,FileWritePre' s:item 'if (empty(g:autolinker_exclude_filetypes_rx) || &filetype !~? g:autolinker_exclude_filetypes_rx) && !filereadable(expand("<afile>")) | Alcachereset | endif'
+    endfor
+    unlet! s:item
+augroup end
+
+" Check the current buffer too in case the plugin gets loaded after 
+" startup.
+if index(g:autolinker_filetypes, &filetype) != -1
+    Albuffer
+endif
 
 
 let &cpo = s:save_cpo
