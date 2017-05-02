@@ -36,3 +36,30 @@
   MD5 checksum: fcef3b288da74153a143e2d0272fe30e
 version: "0.02"
 
+version: "0.03"
+  - s:EditEdit(): try|catch
+  - prototype.Jump_tag: Ignore E73
+  - FIX #1: s/autogroup!/autocmd!/ Don't delete the AutoLinker autocmd group; don't set b:undo_ftplugin
+  - Require tlib >= 1.21
+  - FIX enable autolinker on FileType autocommand
+  - FIX interplay of g:autolinker#layout and g:autolinker#edit_* (relevant to the <LL>a maps (g:autolinker#map_options)
+  - misc improvements & fixes
+  - Handle mailto:; etc.
+  - Support mailto: URLs, use queries ?q=SEARCHTEXT, ?lnum=N
+  - prototype.SplitFilename(): Don't display message on #q=... and similar (just assume the probably right thing)
+  - g:autolinker#url_rx
+  - Improve maps
+  - s:Jump(): FIX handling of w: variables
+  - FIX #2: Support for hyperlink markup
+  - viki: Support for intervikis, extended wiki links [[LINK]] or [[LINK][TEXT]]
+  - ft_viki#ExpandCFile(): Improved suffix detection
+  - Support for functions in g:autolinker#cfile_gsub
+  - viki: Append suffix only if a link doesn't already include it
+  - viki: Try harder to find the file
+  - autolinker#Balloon(): FIX s/self/autolinker/
+  - Use tlib#file#Filereadable() (tlib >= 1.24)
+  - autolinker#EnableBuffer(): Make sure not to init a buffer twice
+  - Simplify g:autolinker#hyperlinks_markup_rx
+  - Check the current buffer too in case the plugin gets loaded after startup
+  SHA256 checksum: 9c516effdfd7c6c373b4861443d17fc044a7914d4ae2d3feb0bc0fba537f78d9
+
