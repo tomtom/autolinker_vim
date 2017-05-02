@@ -1,15 +1,15 @@
 " @Author:      Thomas Link (micathom AT gmail.com)
 " @GIT:         http://github.com/tomtom/autolinker_vim/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2017-04-05.
-" @Revision:    122
+" @Last Change: 2017-05-02.
+" @Revision:    123
 " GetLatestVimScripts: 5253 0 :AutoInstall: autolinker.vim
 " Automatic hyperlinks for any filetype
 
-if &cp || exists("loaded_autolinker")
+if &cp || exists('loaded_autolinker')
     finish
 endif
-let loaded_autolinker = 2
+let loaded_autolinker = 3
 
 let s:save_cpo = &cpo
 set cpo&vim
