@@ -1,11 +1,8 @@
-*autolinker.txt*       Automatic links for any filetype (e.g. for a markdown/latex based wiki)
-                Author: Thomas Link, micathom AT gmail com?subject=vim
-
 Features:
 
-- Call |:Autolinkbuffer| to enable autolinker for the current buffer 
-  or check the definitions of |g:autolinker_filetypes| and 
-  |g:autolinker_patterns|.
+- Call `:Autolinkbuffer` to enable autolinker for the current buffer 
+  or check the definitions of `g:autolinker_filetypes` and 
+  `g:autolinker_patterns`.
 - Jump to files in the current directory
 - Jump to files in 'path'
 - Jump to tags
@@ -21,11 +18,11 @@ Features:
 - file URLs (an encoded URL starting with "file://") can be used to 
   circumvent encoding issues etc.
 
-The default map is `gz` in normal and visual mode (see |g:autolinker#nmap| and 
-|g:autolinker#xmap|). In insert mode, it is <c-cr> if the key is yet unmapped 
-(see |g:autolinker#imap|).
+The default map is `gz` in normal and visual mode (see `g:autolinker#nmap` and 
+`g:autolinker#xmap`). In insert mode, it is \<c-cr> if the key is yet unmapped 
+(see `g:autolinker#imap`).
 
-Differences to |gf|:
+Differences to `gf`:
 
 - Customizable & extensible
 - Supports several methods
@@ -35,7 +32,8 @@ Differences to |gf|:
 
 
 -----------------------------------------------------------------------
-Install~
+
+# Install
 
 Either use the zip archive:
 
@@ -51,7 +49,16 @@ or install from github:
 NOTE: On Windows, ~/.vim might be ~/vimfiles. Please see 'runtimepath' 
 for details.
 
-This script requires tlib (vimscript #1863) to be installed -- see 
+This script requires tlib ([vimscript #1863](http://www.vim.org/scripts/script.php?script_id=1863)) to be installed -- see 
 https://github.com/tomtom/tlib_vim.
 
-%s
+
+
+Dependencies:
+<dl>
+<dt>tlib (>= 1.21)</dt><dd>http://github.com/tomtom/tlib_vim</dd>
+</dl>
+
+License: GPLv3 or later
+
+

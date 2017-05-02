@@ -3,23 +3,23 @@
 
 Features:
 
-    - Call |:Autolinkbuffer| to enable autolinker for the current buffer 
-      or check the definitions of |g:autolinker_filetypes| and 
-      |g:autolinker_patterns|.
-    - Jump to files in the current directory
-    - Jump to files in 'path'
-    - Jump to tags
-    - Jump to file URLs
-    - Jump to line numbers (syntax: filename#123 where '123' is the line 
-      number)
-    - Jump to the first occurrence of a string (syntax: 
-      filename#q=STRING)
-    - Invoke URLs
-    - Highlight potential hyperlinks (doesn't work with all filetypes)
-    - Use a fallback command (e.g. create inexistent files)
-    - Special support for markdown (incl. link maps), viki files
-    - file URLs (an encoded URL starting with "file://") can be used to 
-      circumvent encoding issues etc.
+- Call |:Autolinkbuffer| to enable autolinker for the current buffer 
+  or check the definitions of |g:autolinker_filetypes| and 
+  |g:autolinker_patterns|.
+- Jump to files in the current directory
+- Jump to files in 'path'
+- Jump to tags
+- Jump to file URLs
+- Jump to line numbers (syntax: filename#123 where '123' is the line 
+  number)
+- Jump to the first occurrence of a string (syntax: 
+  filename#q=STRING)
+- Invoke URLs
+- Highlight potential hyperlinks (doesn't work with all filetypes)
+- Use a fallback command (e.g. create inexistent files)
+- Special support for markdown (incl. link maps), viki files
+- file URLs (an encoded URL starting with "file://") can be used to 
+  circumvent encoding issues etc.
 
 The default map is `gz` in normal and visual mode (see |g:autolinker#nmap| and 
 |g:autolinker#xmap|). In insert mode, it is <c-cr> if the key is yet unmapped 
@@ -27,29 +27,32 @@ The default map is `gz` in normal and visual mode (see |g:autolinker#nmap| and
 
 Differences to |gf|:
 
-    - Customizable & extensible
-    - Supports several methods
-    - Highlight some potential hyperlinks if possible
-    - When there are multiple potential matches, users can select the right 
-      file from a list
+- Customizable & extensible
+- Supports several methods
+- Highlight some potential hyperlinks if possible
+- When there are multiple potential matches, users can select the right 
+  file from a list
 
 
 -----------------------------------------------------------------------
 Install~
 
-To install the vimball, edit the vba file and type: >
+Either use the zip archive:
 
-    :so %
+- Download the zip archive
+- Extract it to `~/.vim/pack/tml/start/autolinker`
 
-See :help vimball for details.
+or install from github:
 
-To install from github, please use a plugin manager like enable_vim, pathogen, 
-VAM, Vundle, NeoBundle, vim-plug, vim-unbundle etc.
+- Start a terminal
+- Change the working directory to `~/.vim/pack/tml/start/`
+- Type: `git clone https://github.com/tomtom/autolinker_vim`
+
+NOTE: On Windows, ~/.vim might be ~/vimfiles. Please see 'runtimepath' 
+for details.
 
 This script requires tlib (vimscript #1863) to be installed -- see 
 https://github.com/tomtom/tlib_vim.
-
-Also available on https://github.com/tomtom/autolinker_vim
 
 ========================================================================
 Contents~
@@ -61,6 +64,7 @@ Contents~
         :Alfind ............................... |:Alfind|
         g:autolinker#use_highlight ............ |g:autolinker#use_highlight|
         g:autolinker#types .................... |g:autolinker#types|
+        g:autolinker#hyperlinks_markup_rx ..... |g:autolinker#hyperlinks_markup_rx|
         g:autolinker#nmap ..................... |g:autolinker#nmap|
         g:autolinker#imap ..................... |g:autolinker#imap|
         g:autolinker#xmap ..................... |g:autolinker#xmap|
@@ -106,11 +110,12 @@ g:autolinker_exclude_filetypes_rx (default: '')
 ------------------------------------------------------------------------
                                                     *autoload/autolinker.vim*
                                                     *g:autolinker#use_highlight*
-g:autolinker#use_highlight     (default: ['word', 'url', 'cfile_gsub'])
+g:autolinker#use_highlight     (default: ['word', 'url', 'cfile_gsub', 'hyperlinks_markup'])
     Items that should be highlighted as hyperlinks:
     - word
     - url
     - cfile_gsub
+    - hyperlinks_markup
 
                                                     *g:autolinker#types*
 g:autolinker#types             (default: ['internal', 'system', 'path', 'def', 'tag', 'fallback'])
@@ -122,6 +127,15 @@ g:autolinker#types             (default: ['internal', 'system', 'path', 'def', '
     - path (files in 'path')
     - tag (tags)
     - fallback (see |g:autolinker#fallback|)
+
+                                                    *g:autolinker#hyperlinks_markup_rx*
+g:autolinker#hyperlinks_markup_rx (default: [...])
+    Support for commonly used hyperlink markup:
+    - [[LINK]], [[LINK|TEXT]], [[LINK][TEXT]]
+    - [[TEXT > LINK]], [[TEXT >> LINK]]
+    - [TEXT](LINK)
+    - [url=LINK]TEXT[/url]
+    - <a href="LINK">TEXT</a>
 
                                                     *g:autolinker#nmap*
 g:autolinker#nmap              (default: 'gz')
@@ -183,17 +197,40 @@ g:autolinker#index             (default: '"index.". expand("%:e")')
     exists. If so, open that file instead of the directory.
 
                                                     *g:autolinker#cfile_gsub*
-g:autolinker#cfile_gsub        (default: [])
-    A list of lists [RX, SUB, optional: {OPT => VALUE}] that are 
-    applied to the |<cfile>| under the cursor. This can be used to 
-    rewrite filenames and URLs, in order to implement e.g. interwikis.
+g:autolinker#cfile_gsub        (default: [...])
+    A list of lists that have either form
+      ['RX', 'SUBST'], ['RX', 'SUBST', {OPTION => VALUE}]
+    or
+      ['RX', {'function': FUNCTION}].
 
     RX must be a |magic| |regexp|.
+
+    In the first form, RX (a |regexp| |pattern|) is replaced with 
+    SUBST in a filename. SUBST may contain group references. See 
+    |sub-replace-special| for details.
+
+    In the second form, FUNCTION is applied to the filename. The 
+    filename usually is the |<cfile>| under the cursor.
+
+    This can be used to rewrite filenames and URLs, in order to 
+    implement e.g. interwikis.
+
+    By default, the following prefixes are defined:
+
+      DOI:  ... https://dx.doi.org/
+      ISBN: ... https://www.worldcat.org/
+      PMID: ... https://www.ncbi.nlm.nih.gov/pubmed/
+
+    NOTE: If you don't like the double-colon as separator, you can use 
+    wiki-style markup to use a blank as separator: `[[PMID 123]]`.
 
     Options:
       flags = 'g' ... flags for |substitute()|
       stop = 0 ...... Don't process other gsubs when this |regexp| 
                       matches
+
+    The variable `g:autolinker#cfile_gsub_user` can be used to extend 
+    the default value.
 
     Examples:
     ["^WIKI/", "~/MyWiki/"] .............. Redirect to wiki
