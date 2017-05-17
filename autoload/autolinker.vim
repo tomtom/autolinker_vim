@@ -1,8 +1,8 @@
 " @thor:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2017-04-05
-" @Revision:    1164
+" @Last Change: 2017-05-03
+" @Revision:    1177
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 121
@@ -19,7 +19,7 @@ if !exists('g:autolinker#use_highlight')
     " - word
     " - url
     " - cfile_gsub
-    " - hyperlinks_markup
+    " - hyperlinks_markup (unreliable)
     let g:autolinker#use_highlight = ['word', 'url', 'cfile_gsub', 'hyperlinks_markup']   "{{{2
 endif
 
@@ -27,6 +27,11 @@ endif
 if !exists('g:autolinker#url_rx')
     let g:autolinker#url_rx = '\<\%([a-zA-Z]\{2,10}://\|mailto:\)[-@./[:alnum:]_+~=%#?&]\+'   "{{{2
     " let g:autolinker#url_rx = '\<\%(ht\|f\)tps\?:\/\/\f\+'   "{{{2
+endif
+
+
+if !exists('g:autolinker#filenamechars_rx')
+    let g:autolinker#filenamechars_rx = '[[:alnum:].\/_+~=%#-]'   "{{{2
 endif
 
 
@@ -357,7 +362,7 @@ function! s:prototype.CfileGsubRx() abort dict "{{{3
     if empty(crx)
         let rv = ''
     else
-        let rv = '\m\<'. printf('\%%(%s\)', join(crx, '\|')) .'\f*'
+        let rv = '\C\m\<'. printf('\%%(%s\)', join(crx, '\|')) . g:autolinker#filenamechars_rx .'*'
     endif
     Tlibtrace 'autolinker', rv
     return rv
