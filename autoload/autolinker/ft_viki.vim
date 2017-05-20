@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2017-04-04
-" @Revision:    58
+" @Last Change: 2017-05-18
+" @Revision:    62
 
 
 let s:prototype = {}
@@ -60,10 +60,10 @@ endf
 function! s:MaybeAppendSuffix(text, suffix) abort "{{{3
     let l:tsuf = a:text[-len(a:suffix) : -1]
     Tlibtrace 'autolinker', a:text, a:suffix, l:tsuf
-    if l:tsuf ==# a:suffix
+    if l:tsuf ==# '\V'. escape(a:suffix, '\') .'\(#\|$\)'
         return a:text
     else
-        return a:text . a:suffix
+        return substitute(a:text, '\V\ze\(#\|$\)', escape(a:suffix, '\&'), '')
     endif
 endf
 
