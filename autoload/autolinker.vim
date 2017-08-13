@@ -1,8 +1,8 @@
-" @thor:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
+" @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2017-05-03
-" @Revision:    1177
+" @Last Change: 2017-08-13
+" @Revision:    1179
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 121
@@ -113,7 +113,7 @@ endif
 
 if !exists('g:autolinker#layout')
     " Command for working with layouts.
-    let g:autolinker#layout = {'*': {'cmd_dir': '%{CMD}', 'cmd_file': 'tab drop %{FILENAMEX}'}, 'w': {'cmd': '<count>wincmd w | %{CMD}'}, 't': {'cmd': '<count>tabn | %{CMD}'}, 's': {'cmd': '<count>split +%{CMD}'}, 'v': {'cmd': '<count>vsplit +%{CMD}'}}   "{{{2
+    let g:autolinker#layout = {'*': {'cmd_dir': '%{CMD}', 'cmd_file': 'tab '. (has('gui') ? 'drop' : 'edit') .' %{FILENAMEX}'}, 'w': {'cmd': '<count>wincmd w | %{CMD}'}, 't': {'cmd': '<count>tabn | %{CMD}'}, 's': {'cmd': '<count>split +%{CMD}'}, 'v': {'cmd': '<count>vsplit +%{CMD}'}}   "{{{2
 endif
 
 
