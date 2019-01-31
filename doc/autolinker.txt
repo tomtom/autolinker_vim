@@ -63,6 +63,7 @@ Contents~
         :Algrep ............................... |:Algrep|
         :Alfind ............................... |:Alfind|
         g:autolinker#use_highlight ............ |g:autolinker#use_highlight|
+        g:autolinker#url_rx ................... |g:autolinker#url_rx|
         g:autolinker#types .................... |g:autolinker#types|
         g:autolinker#hyperlinks_markup_rx ..... |g:autolinker#hyperlinks_markup_rx|
         g:autolinker#nmap ..................... |g:autolinker#nmap|
@@ -110,12 +111,17 @@ g:autolinker_exclude_filetypes_rx (default: '')
 ------------------------------------------------------------------------
                                                     *autoload/autolinker.vim*
                                                     *g:autolinker#use_highlight*
-g:autolinker#use_highlight     (default: ['word', 'url', 'cfile_gsub', 'hyperlinks_markup'])
+g:autolinker#use_highlight     (default: ['word', 'path', 'url', 'cfile_gsub', 'hyperlinks_markup'])
     Items that should be highlighted as hyperlinks:
     - word
+    - path
     - url
     - cfile_gsub
-    - hyperlinks_markup
+    - hyperlinks_markup (unreliable)
+
+                                                    *g:autolinker#url_rx*
+g:autolinker#url_rx            (default: '\<\%([a-zA-Z]\{2,10}://\|mailto:\)\f\+')
+    let g:autolinker#url_rx = '\<\%([a-zA-Z]\{2,10}://\|mailto:\)[-@./[:alnum:]_+~=%#?&]\+'   "
 
                                                     *g:autolinker#types*
 g:autolinker#types             (default: ['internal', 'system', 'path', 'def', 'tag', 'fallback'])
@@ -165,7 +171,7 @@ g:autolinker#map_prefix        (default: '<LocalLeader>a%s')
       2\awgz ... Open the destination in the second window
 
                                                     *g:autolinker#layout*
-g:autolinker#layout            (default: {'*': {'cmd_dir': '%{CMD}', 'cmd_file': 'tab drop %{FILENAMEX}'}, 'w': {'cmd': '<count>wincmd w | %{CMD}'}, 't': {'cmd': '<count>tabn | %{CMD}'}, 's': {'cmd': '<count>split +%{CMD}'}, 'v': {'cmd': '<count>vsplit +%{CMD}'}})
+g:autolinker#layout            (default: {'*': {'cmd_dir': '%{CMD}', 'cmd_file': 'tab '. (has('gui') ? 'drop' : 'edit') .' %{FILENAMEX}'}, 'w': {'cmd': '<count>wincmd w | %{CMD}'}, 't': {'cmd': '<count>tabn | %{CMD}'}, 's': {'cmd': '<count>split +%{CMD}'}, 'v': {'cmd': '<count>vsplit +%{CMD}'}})
     Command for working with layouts.
 
                                                     *g:autolinker#edit_file*
