@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2017-08-13
-" @Revision:    1179
+" @Last Change: 2018-11-06
+" @Revision:    1203
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 121
@@ -17,16 +17,17 @@ endif
 if !exists('g:autolinker#use_highlight')
     " Items that should be highlighted as hyperlinks:
     " - word
+    " - path
     " - url
     " - cfile_gsub
     " - hyperlinks_markup (unreliable)
-    let g:autolinker#use_highlight = ['word', 'url', 'cfile_gsub', 'hyperlinks_markup']   "{{{2
+    let g:autolinker#use_highlight = ['word', 'path', 'url', 'cfile_gsub', 'hyperlinks_markup']   "{{{2
 endif
 
 
 if !exists('g:autolinker#url_rx')
-    let g:autolinker#url_rx = '\<\%([a-zA-Z]\{2,10}://\|mailto:\)[-@./[:alnum:]_+~=%#?&]\+'   "{{{2
-    " let g:autolinker#url_rx = '\<\%(ht\|f\)tps\?:\/\/\f\+'   "{{{2
+    " let g:autolinker#url_rx = '\<\%([a-zA-Z]\{2,10}://\|mailto:\)[-@./[:alnum:]_+~=%#?&]\+'   "{{{2
+    let g:autolinker#url_rx = '\<\%([a-zA-Z]\{2,10}://\|mailto:\)\f\+'   "{{{2
 endif
 
 
@@ -347,6 +348,9 @@ endf
 
 function! s:prototype.ClearHighlight() abort dict "{{{3
     silent! syntax clear AutoHyperlink
+    silent! syntax clear AutoHyperlinkWord
+    silent! syntax clear AutoHyperlinkURL
+    silent! syntax clear AutoHyperlinkCfile
 endf
 
 
@@ -372,16 +376,30 @@ endf
 function! s:prototype.Highlight() abort dict "{{{3
     Tlibtrace 'autolinker', self.use_highlight
     if !empty(self.use_highlight)
+        call self.ClearHighlight()
         if index(self.use_highlight, 'word') != -1
-            call self.ClearHighlight()
             let rx = join(map(values(self.defs), 'v:val.rx'), '\|')
             " TLogVAR rx
             if !empty(rx)
                 exec 'syntax match AutoHyperlinkWord /'. escape(rx, '/') .'/ containedin=ALL'
             endif
         endif
+        if index(self.use_highlight, 'path') != -1
+            let files = filter(tlib#list#Uniq(map(globpath(&path, '*.'. expand('%:e'), 0, 1), 'fnamemodify(v:val, ":t:r")')), '!has_key(self.defs, v:val)')
+            if !empty(files)
+                let rx = join(map(files, 'tlib#rx#Escape(v:val)'), '\|')
+                exec 'syntax match AutoHyperlinkWord /\<\%('. escape(rx, '/') .'\)\>/ containedin=ALL'
+            endif
+        endif
+        if index(self.use_highlight, 'path') != -1
+            let rx = join(map(values(self.defs), 'v:val.rx'), '\|')
+            " TLogVAR rx
+            if !empty(rx)
+                exec 'syntax match AutoHyperlinkWord /\<\%('. escape(rx, '/') .'\)\>/ containedin=ALL'
+            endif
+        endif
         if index(self.use_highlight, 'url') != -1
-            exec 'syntax match AutoHyperlinkURL /'. escape(g:autolinker#url_rx, '/') .'/ containedin=ALL'
+            exec 'syntax match AutoHyperlinkURL /\<'. escape(g:autolinker#url_rx, '/') .'/ containedin=ALL'
         endif
         if index(self.use_highlight, 'cfile_gsub') != -1
             let crx = self.CfileGsubRx()
@@ -430,14 +448,17 @@ function! s:prototype.SplitFilename(filename) abort dict "{{{3
     " let fragment = matchstr(a:filename, '#\zs'. g:autolinker#fragment_rx)
     let postprocess = ''
     let filename = substitute(a:filename, '^.\{-}\zs[?#].*$', '', '')
+    if empty(filename)
+        let filename = expand('%:p')
+    endif
     if !(tlib#file#Filereadable(a:filename) && !tlib#file#Filereadable(filename))
         let query = matchstr(a:filename, '?\zs[^#]\+')
         if !empty(query)
             Tlibtrace 'autolinker', query
             if query =~# '^lnum=\d\+$'
-                let postprocess = substitute(query, '^lnum=', '', '')
-            elseif query =~# '^q=\S\+$'
-                let postprocess = '/'. escape(substitute(query, '^q=', '', ''), '/')
+                let postprocess = strpart(query, strwidth('lnum='))
+            elseif query =~# '^q='
+                let postprocess = '/'. escape(strpart(query, strwidth('q=')), '/')
             else
                 throw 'autolinker.SplitFilename: Unsupported query: '. a:filename
             endif
@@ -453,12 +474,12 @@ function! s:prototype.SplitFilename(filename) abort dict "{{{3
                 " echohl WarningMsg
                 " echom 'autolinker: Deprecated: Please use ?lnum=TEXT instead:' string(fragment)
                 " echohl NONE
-                let postprocess = substitute(fragment, '^lnum=', '', '')
-            elseif fragment =~# '^q=\S\+$'
+                let postprocess = strpart(fragment, strwidth('lnum='))
+            elseif fragment =~# '^q='
                 " echohl WarningMsg
                 " echom 'autolinker: Deprecated: Please use ?q=TEXT instead:' string(fragment)
                 " echohl NONE
-                let postprocess = '/'. escape(substitute(fragment, '^q=', '', ''), '/')
+                let postprocess = '/'. escape(strpart(fragment, strwidth('q=')), '/')
             else
                 let postprocess = '/'. escape(fragment, '/')
             endif
