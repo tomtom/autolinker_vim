@@ -1,14 +1,14 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2019-03-15
-" @Revision:    1207
+" @Last Change: 2019-04-23
+" @Revision:    1209
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 121
     runtime plugin/tlib.vim
     if !exists('g:loaded_tlib') || g:loaded_tlib < 121
-        echoerr 'tlib >= 1.21 is required'
+        echoerr 'tlib >= 1.21 is required -- http://bit.ly/tlib_vim'
         finish
     endif
 endif
@@ -26,8 +26,8 @@ endif
 
 
 if !exists('g:autolinker#url_rx')
-    " let g:autolinker#url_rx = '\<\%([a-zA-Z]\{2,10}://\|mailto:\)[-@./[:alnum:]_+~=%#?&]\+'   "{{{2
-    let g:autolinker#url_rx = '\<\%([a-zA-Z]\{2,10}://\|mailto:\)\f\+'   "{{{2
+    let g:autolinker#url_rx = '\<\%([a-zA-Z]\{2,10}://\|mailto:\)[-@./[:alnum:]_+~=%#?&]\+'   "{{{2
+    " let g:autolinker#url_rx = '\<\%([a-zA-Z]\{2,10}://\|mailto:\)\f\+'   "{{{2
 endif
 
 
