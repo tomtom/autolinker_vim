@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-10-13
-" @Revision:    40
+" @Last Change: 2020-03-19
+" @Revision:    42
 
 
 let s:prototype = {}
@@ -30,7 +30,7 @@ endf
 
 function! s:GetLinkMapLink(cfile) abort "{{{3
     let lines = getline(line('.'), '$')
-    let rx = printf('^\s\+\[%s\]:\s\+\zs\S\+', a:cfile)
+    let rx = printf('\V\^\s\+[%s]:\s\+\zs\S\+', tlib#rx#Escape(a:cfile, 'V'))
     let lines = filter(lines, 'v:val =~ rx')
     if !empty(lines)
         return matchstr(lines[0], rx)
