@@ -1,8 +1,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @Website:     http://github.com/tomtom/
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2019-04-23
-" @Revision:    1209
+" @Last Change: 2022-07-07
+" @Revision:    1212
 
 
 if !exists('g:loaded_tlib') || g:loaded_tlib < 121
@@ -239,6 +239,14 @@ if !exists('g:autolinker#fragment_rx')
 endif
 
 
+if !exists('g:autolinker#glob_maxfilenames')
+    let g:autolinker#glob_maxfilenames = 256   "{{{2
+endif
+if g:autolinker#glob_maxfilenames < 1
+    let g:autolinker#glob_maxfilenames = 1
+endif
+
+
 let s:prototype = {'mode': 'n'
             \ , 'fallback': g:autolinker#fallback
             \ , 'types': g:autolinker#types
@@ -279,7 +287,11 @@ function! s:Globpath(path, pattern) abort "{{{3
         let matches = tlib#list#Uniq(matches)
         let g:autolinker_glob_cache[id] = {'files': matches}
     endif
-    return matches
+    if g:autolinker#glob_maxfilenames > 0
+        return matches[0 : (g:autolinker#glob_maxfilenames - 1)]
+    else
+        return matches
+    endif
 endf
 
 
